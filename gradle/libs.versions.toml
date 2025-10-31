@@ -1,0 +1,14 @@
+[versions]
+
+[libraries]
+scala="org.scala-lang:scala-library:3.3.4"
+
+scala-test="org.scalatest:scalatest_3:3.2.19"
+junit-patform-launcher="org.junit.platform:junit-platform-launcher:1.13.1"
+junit-patform-engine="org.junit.platform:junit-platform-engine:1.13.1"
+junit-scala-test-plus="org.scalatestplus:junit-5-13_3:3.2.19.0"
+
+[bundles]
+
+
+[plugins]
