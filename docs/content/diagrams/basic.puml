@@ -1,0 +1,11 @@
+@startuml
+class AClass {
+  +String name
+}
+
+class BClass {
+  +String name
+}
+
+AClass "1" -- "0..*" BClass : relation
+@enduml

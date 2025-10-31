@@ -7,5 +7,6 @@ include(
     "adapters:octopus",
     "adapters:relay",
     "adapters:audit",
+    "docs"
 )
 
