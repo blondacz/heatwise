@@ -11,4 +11,9 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v3
       - run: ./gradlew --no-daemon build
-      - run: ./gradlew --no-daemon :docs:renderPuml
+      - name: Render PUML with Docker
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/docs/content/diagrams:/work" \
+            plantuml/plantuml:latest \
+            -tpng -tsvg .
