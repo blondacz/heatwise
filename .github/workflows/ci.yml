@@ -13,7 +13,9 @@ jobs:
       - run: ./gradlew --no-daemon build
       - name: Render PUML with Docker
         run: |
+          ls -la "${{ github.workspace }}/docs/content/diagrams"   # sanity check
           docker run --rm \
-            -v "$GITHUB_WORKSPACE/docs/content/diagrams:/work" \
+            -v "${{ github.workspace }}/docs/content/diagrams:/workspace" \
+            -w /workspace \
             plantuml/plantuml:latest \
-            -tpng -tsvg .
+            -tpng -tsvg *.puml
