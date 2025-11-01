@@ -12,6 +12,7 @@ import scala.util.Random
 class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
   private val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
   private val now = clock.instant()
+  private val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).toLocalTime
   private val defaultDelay = Delay()
   private val policy = Policy(3, None, defaultDelay)
 
@@ -44,9 +45,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high and not in preheat period" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).minusMinutes(16).toLocalTime
-
-      val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
+      val preheatBefore = PreheatBefore(localNow.minusMinutes(16), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
       val price = Price(now, 4)
@@ -56,8 +55,6 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high and at the end of preheat period" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).toLocalTime
-
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
@@ -68,8 +65,6 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high, in the preheat period but delay is too short after heating on" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).toLocalTime
-
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
@@ -80,8 +75,6 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }  
     
     "price too high, in the preheat period but delay is too short after heating off" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).toLocalTime
-
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
@@ -123,9 +116,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high but in preheat period with no previous on" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).plusMinutes(5).toLocalTime
-
-      val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
+      val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
       val price = Price(now, 4)
@@ -135,9 +126,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high but in preheat period with previous on and sufficient delay" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).plusMinutes(5).toLocalTime
-
-      val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
+      val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
       val price = Price(now, 4)
@@ -147,9 +136,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "price too high but in preheat period with previous off and sufficient delay" in {
-      val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC).plusMinutes(5).toLocalTime
-
-      val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
+      val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
       val price = Price(now, 4)
