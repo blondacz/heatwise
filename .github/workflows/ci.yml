@@ -11,6 +11,21 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v3
       - run: ./gradlew --no-daemon build
+      - name: Test Report (summary)
+        uses: dorny/test-reporter@v2
+        if: ${{ always() }}
+        with:
+          path: |
+            **/build/test-results/test/*.xml
+            **/build/test-results/*/TEST-*.xml
+          reporter: java-junit
+          use-actions-summary: true
+          only-summary: false          # set true if you want just a compact table
+          list-suites: all          # or: all | none
+          list-tests: all           # or: all | none
+          max-annotations: 10
+          fail-on-error: true
+          name: 'Test Report'
       - name: Render PUML with Docker
         run: |
           ls -la "${{ github.workspace }}/docs/content/diagrams"   # sanity check
@@ -19,9 +34,4 @@ jobs:
             -w /workspace \
             plantuml/plantuml:latest \
             -tpng -tsvg *.puml
-      - name: Summarize JUnit results
-        uses: test-summary/action@v2
-        if: ${{ always() }}
-        with:
-          paths: |
-            **/build/test-results/test/*.xml        # Gradle (JUnit)
+      
