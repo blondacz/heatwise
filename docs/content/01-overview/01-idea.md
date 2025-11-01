@@ -25,11 +25,6 @@ Control happens through a **Wi-Fi relay** (e.g., Shelly Pro or Sonoff) that oper
 3. Command the Wi-Fi relay to energize or cut power to the immersion contactor.
 4. Record each decision for transparency and analysis.
 
-## Intended Users
-- Homeowners or tinkerers with **Octopus Agile tariffs**.
-- People running **smart energy setups** (Home Assistant, Raspberry Pi, or Kubernetes).
-- Developers or engineers exploring **event-driven control** of IoT energy devices.
-
 ## Vision
 A simple, open-source controller demonstrating that **data-driven energy efficiency** can be achieved with clear logic, minimal hardware, and full local autonomy—no vendor lock-in.
 

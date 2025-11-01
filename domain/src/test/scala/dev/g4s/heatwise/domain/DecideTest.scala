@@ -19,7 +19,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
   "should not switch on when" - {
     "price is too high" in {
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, None, policy)
 
       decision.reason shouldBe PriceTooHigh(4, 3)
@@ -28,8 +28,8 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "delay is too short - after on" in {
-      val price = Price(now, 3)
-      
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(3), BigDecimal(3.15))
+
       val decision = Decide.decide(clock, price, Some(now -> true), policy)
 
       decision.reason shouldBe DelayTooShort(defaultDelay,now)
@@ -37,7 +37,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
     }
 
     "delay is too short - after off" in {
-      val price = Price(now, 3)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(3), BigDecimal(3.15))
       val decision = Decide.decide(clock, price, Some(now -> false), policy)
 
       decision.reason shouldBe DelayTooShort(defaultDelay,now)
@@ -48,7 +48,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow.minusMinutes(16), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, None, policy)
       decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
       decision.heatOn shouldBe false
@@ -58,7 +58,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, None, policy)
       decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
       decision.heatOn shouldBe false
@@ -68,17 +68,17 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, Some(now -> true), policy)
       decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
       decision.heatOn shouldBe false
-    }  
-    
+    }
+
     "price too high, in the preheat period but delay is too short after heating off" in {
       val preheatBefore = PreheatBefore(localNow, Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, Some(now -> false), policy)
       decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
       decision.heatOn shouldBe false
@@ -88,28 +88,31 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
   "should switch on when" - {
     "price is acceptable and no previous switch" in {
-      val price = Price(now, Random.nextInt(4)) //FIXME: Introduce scalacheck
+      val priceValue = BigDecimal(Random.nextInt(4)) //FIXME: Introduce scalacheck
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), priceValue, priceValue * 1.05)
       val decision = Decide.decide(clock, price, None, policy)
       decision.reason shouldBe PriceOk(price.pricePerKWh, policy.maxPricePerKWh)
       decision.heatOn shouldBe true
     }
 
     "price is negative and no previous switch" in {
-      val price = Price(now, -1)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(-1), BigDecimal(-1.05))
       val decision = Decide.decide(clock, price, None, policy)
       decision.reason shouldBe PriceOk(price.pricePerKWh, policy.maxPricePerKWh)
       decision.heatOn shouldBe true
     }
 
     "price is acceptable after switching off with sufficient delay" in {
-      val price = Price(now, Random.nextInt(3))
+      val priceValue = BigDecimal(Random.nextInt(3))
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), priceValue, priceValue * 1.05)
       val decision = Decide.decide(clock, price, Some(now.minus(defaultDelay.minOnMinutes,ChronoUnit.MINUTES) -> false), policy)
       decision.reason shouldBe PriceOk(price.pricePerKWh, policy.maxPricePerKWh)
       decision.heatOn shouldBe true
     }
 
     "price is acceptable after switching on with sufficient delay" in {
-      val price = Price(now, Random.nextInt(4))
+      val priceValue = BigDecimal(Random.nextInt(4))
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), priceValue, priceValue * 1.05)
       val decision = Decide.decide(clock, price, Some(now.minus(defaultDelay.minOffMinutes,ChronoUnit.MINUTES) -> true), policy)
       decision.reason shouldBe PriceOk(price.pricePerKWh, policy.maxPricePerKWh)
       decision.heatOn shouldBe true
@@ -119,7 +122,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, None, policy)
       decision.reason shouldBe InPreheatPeriod(preheatBefore) withClue s"should be in preheat period ${localNow.toString}"
       decision.heatOn shouldBe true
@@ -129,7 +132,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, Some(now.minus(defaultDelay.minOffMinutes,ChronoUnit.MINUTES) -> true), policy)
       decision.reason shouldBe InPreheatPeriod(preheatBefore) withClue s"should be in preheat period ${localNow.toString}"
       decision.heatOn shouldBe true
@@ -139,7 +142,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val preheatBefore = PreheatBefore(localNow.plusMinutes(5), Duration.ofMinutes(15))
       val policy = Policy(3, Some(preheatBefore), defaultDelay)
 
-      val price = Price(now, 4)
+      val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, Some(now.minus(defaultDelay.minOnMinutes,ChronoUnit.MINUTES) -> false), policy)
       decision.reason shouldBe InPreheatPeriod(preheatBefore) withClue s"should be in preheat period ${localNow.toString}"
       decision.heatOn shouldBe true

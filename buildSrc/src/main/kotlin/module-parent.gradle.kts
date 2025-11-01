@@ -1,7 +1,3 @@
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.*
-
 plugins {
     `java-library`
     `jvm-test-suite`
@@ -36,9 +32,10 @@ testing {
         withType<JvmTestSuite> {
             useJUnitJupiter()
             dependencies {
+                implementation(project())
                 implementation(libs.findLibrary("scala-test").get())
-                implementation(libs.findLibrary("junit-patform-launcher").get())
-                implementation(libs.findLibrary("junit-patform-engine").get())
+                implementation(libs.findLibrary("junit-platform-launcher").get())
+                implementation(libs.findLibrary("junit-platform-engine").get())
                 implementation(libs.findLibrary("junit-scala-test-plus").get())
             }
         }

@@ -3,7 +3,18 @@ package dev.g4s.heatwise.domain
 import java.time.*
 import java.time.Duration.*
 
-final case class Price(slotStart: Instant, pricePerKWh: BigDecimal)
+
+case class PriceRequest(productCode: String, tariffCode: String, from: LocalDateTime, to: LocalDateTime)
+object PriceRequest {
+  def forDay(productCode: String, tariffCode: String, day: LocalDate): PriceRequest = {
+    val from = day.atStartOfDay()
+    val to = day.plusDays(1).atStartOfDay()
+    PriceRequest(productCode, tariffCode, from, to)
+  }
+}
+case class PriceResponse(results: List[PricePoint])
+case class PricePoint(validFrom: ZonedDateTime, validTo: ZonedDateTime, pricePerKWh: BigDecimal, pricePerKwhIncVat: BigDecimal)
+
 final case class Decision(ts: Instant, heatOn: Boolean, reason: DecisionReason)
 
 sealed trait DecisionReason
@@ -16,7 +27,6 @@ object DecisionReason {
   final case class NotInPreheatPeriod(preheatBefore: PreheatBefore) extends DecisionReason
 }
 
-final case class Money()
 final case class Delay(minOnMinutes: Int = 15, minOffMinutes: Int = 10)
 final case class PreheatBefore(readyBy: LocalTime, duration: Duration)
 
@@ -31,7 +41,7 @@ object Decide {
   import DecisionReason.*
 
 
-  def decide(clock: Clock, price: Price, lastOnChange: Option[(Instant, Boolean)], policy: Policy): Decision = {
+  def decide(clock: Clock, price: PricePoint, lastOnChange: Option[(Instant, Boolean)], policy: Policy): Decision = {
     val slotOk = price.pricePerKWh <= policy.maxPricePerKWh
     val now = clock.instant()
     val delayOk = lastOnChange match {
