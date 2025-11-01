@@ -19,9 +19,9 @@ jobs:
             -w /workspace \
             plantuml/plantuml:latest \
             -tpng -tsvg *.puml
-      - name: Publish JUnit results (Checks + PR comment)
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: ${{ always() }}   # publish even if tests fail
+      - name: Summarize JUnit results
+        uses: test-summary/action@v2
+        if: ${{ always() }}
         with:
-          files: |
-            **/build/test-results/test/*.xml
+          paths: |
+            **/build/test-results/test/*.xml        # Gradle (JUnit)
