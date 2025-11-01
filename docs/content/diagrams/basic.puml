@@ -1,11 +1,19 @@
 @startuml
-class AClass {
-  +String name
-}
+skinparam roundcorner 15
+skinparam shadowing false
+skinparam dpi 180
 
-class BClass {
-  +String name
+actor User
+rectangle "Octopus Agile API" as Octopus
+node "Heatwise Service (Pekko Streams)" as App {
+  [Price Poller] --> [Decision Logic]
+  [Decision Logic] --> [Relay Adapter]
+  [Decision Logic] --> [Decision Log]
 }
+node "Shelly/Contactor" as Relay
 
-AClass "1" -- "0..*" BClass : relation
+User --> App : configure thresholds
+Octopus --> [Price Poller] : HTTP JSON
+[Relay Adapter] --> Relay : HTTP (LAN)
+[Decision Log] --> "Append-only file" : CSV
 @enduml
