@@ -3,6 +3,7 @@ package dev.g4s.heatwise.adapters.relay
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.time.{Millis, Seconds, Span}
 import sttp.client4.*
 import sttp.client4.testing.BackendStub
@@ -10,7 +11,7 @@ import sttp.client4.testing.ResponseStub
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ShellySwitchTest extends AnyFreeSpec with Matchers with ScalaFutures {
+class ShellySwitchTest extends AnyFreeSpec with Matchers with ScalaFutures with TableDrivenPropertyChecks {
 
   given ec: ExecutionContext = ExecutionContext.global
   implicit override val patienceConfig: PatienceConfig =
@@ -28,22 +29,24 @@ class ShellySwitchTest extends AnyFreeSpec with Matchers with ScalaFutures {
       url.toString shouldEqual "http://192.168.1.5/rpc/Switch.Set?id=0&on=false"
     }
 
-    "switch should parse successful response" in {
-      val expectedUrl = "http://192.168.1.5/rpc/Switch.Set?id=0&on=true"
+     Table("on/off",true,false).forEvery { on =>
+       s"switch should switch on=$on" in {
+         val expectedUrl = s"http://192.168.1.5/rpc/Switch.Set?id=0&on=$on"
 
-      given backend: Backend[Future] =
-        BackendStub.asynchronousFuture
-          .whenRequestMatches(_.uri.toString == expectedUrl)
-          .thenRespond(ResponseStub.adjust("""{"output": true}"""))
-          .whenAnyRequest
-          .thenRespondNotFound()
+         given backend: Backend[Future] =
+           BackendStub.asynchronousFuture
+             .whenRequestMatches(_.uri.toString == expectedUrl)
+             .thenRespond(ResponseStub.adjust(s"""{"output": $on}"""))
+             .whenAnyRequest
+             .thenRespondNotFound()
 
-      val resultFut = ShellySwitch.switch("192.168.1.5", on = true)
+         val resultFut = ShellySwitch.switch("192.168.1.5", on = on)
 
-      whenReady(resultFut) { result =>
-        result shouldBe Right(ShellySwitch.SwitchResponse(output = true))
-      }
-    }
+         whenReady(resultFut) { result =>
+           result shouldBe Right(on)
+         }
+       }
+     }
 
     "switch should handle HTTP error responses" in {
       given backend: Backend[Future] =

@@ -21,8 +21,8 @@ object ShellySwitch {
 
   case class SwitchResponse(output: Boolean)
 
-  def switch(deviceHost: String, on: Boolean)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, SwitchResponse]] = {
-    val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse])
+  def switch(deviceHost: String, on: Boolean)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, Boolean]] = {
+    val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse]).mapResponse(_.map(_.output))
     request.send(backend).map(_.body)
   }
 
