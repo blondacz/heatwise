@@ -1,0 +1,15 @@
+# Keep the wrapper!
+!gradlew
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Ignore build outputs
+**/build
+.gradle
+
+# Other common ignores
+.git
+.idea
+*.iml
+docs/diagrams/*.png
+docs/diagrams/*.svg

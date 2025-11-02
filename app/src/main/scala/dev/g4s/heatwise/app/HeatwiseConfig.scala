@@ -19,6 +19,7 @@ object HeatwiseConfig {
     sys.env.getOrElse("RELAY_HOST", "192.168.1.50"),
     BigDecimal(sys.env.getOrElse("MAX_PRICE_PER_KWH", "10")),
     sys.env.get("MORNING_PREHEAT"),
-    sys.env.get("DUMMY_RUN").forall(_.toBoolean)
+    sys.env.get("DUMMY_RUN").forall(_.toBoolean),
+    sys.env.get("CHECK_INTERVAL").map(Duration.create(_).asInstanceOf[FiniteDuration]).getOrElse(3.minutes)
   )
 }
