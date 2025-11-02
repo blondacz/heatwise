@@ -25,6 +25,7 @@ object OctopusClient {
   }
 
   def fetchPrices(tariffUrl: Uri)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, PriceResponse]] = {
+    println(tariffUrl)
     val request = basicRequest.get(tariffUrl).response(asJson[PriceResponse])
     request.send(backend).map(_.body)
   }

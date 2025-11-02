@@ -21,9 +21,12 @@ object ShellySwitch {
 
   case class SwitchResponse(output: Boolean)
 
-  def switch(deviceHost: String, on: Boolean)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, Boolean]] = {
-    val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse]).mapResponse(_.map(_.output))
-    request.send(backend).map(_.body)
+  def switch(deviceHost: String, on: Boolean, dummyRun: Boolean = false)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, Boolean]] = {
+    if (dummyRun) 
+      Future.successful(Right(on))
+    else
+      val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse]).mapResponse(_.map(_.output))
+      request.send(backend).map(_.body)
   }
 
 }

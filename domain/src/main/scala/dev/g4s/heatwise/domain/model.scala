@@ -11,9 +11,17 @@ object PriceRequest {
     val to = day.plusDays(1).atStartOfDay()
     PriceRequest(productCode, tariffCode, from, to)
   }
+  
+  def fromDateTimForDuration(productCode: String, tariffCode: String, from: LocalDateTime, duration: Duration): PriceRequest = {
+    val to = from.plus(duration)
+    PriceRequest(productCode, tariffCode, from, to)
+  }
 }
 case class PriceResponse(results: List[PricePoint])
 case class PricePoint(validFrom: ZonedDateTime, validTo: ZonedDateTime, pricePerKWh: BigDecimal, pricePerKwhIncVat: BigDecimal)
+object PricePoint {
+  def MaxPricePerKWh(when: ZonedDateTime) = PricePoint(when, when, BigDecimal(1_000_000), BigDecimal(1_000_000)) 
+}
 
 final case class Decision(ts: Instant, heatOn: Boolean, reason: DecisionReason)
 
