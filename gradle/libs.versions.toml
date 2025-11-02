@@ -19,6 +19,9 @@ pekko-actor='org.apache.pekko:pekko-actor-typed_3:1.2.1'
 
 puml="net.sourceforge.plantuml:plantuml:1.2024.7"
 
+pureconfig-core="com.github.pureconfig:pureconfig-core_3:0.17.9"
+pureconfig-generic-scala3="com.github.pureconfig:pureconfig-generic-scala3_3:0.17.9"
+
 sttp-core='com.softwaremill.sttp.client4:core_3:4.0.13'
 sttp-pekko-backend='com.softwaremill.sttp.client4:pekko-http-backend_3:4.0.13'
 

@@ -5,4 +5,5 @@ docker run --rm -p 8080:8080 \
   -e MAX_PRICE_PER_KWH="6.0" \
   -e MORNING_READY="06:30" \
   -e DUMMY_RUN="true" \
+  -e CHECK_INTERVAL="30.seconds" \
   heatwise:local

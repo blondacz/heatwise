@@ -1,6 +1,10 @@
 package dev.g4s.heatwise.app
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
+import pureconfig.*
+import pureconfig.error.ConfigReaderFailures
+import pureconfig.generic.ProductHint
+import pureconfig.generic.semiauto.*
 
 final case class HeatwiseConfig(
     productCode: String,
@@ -13,13 +17,17 @@ final case class HeatwiseConfig(
 )
 
 object HeatwiseConfig {
-  def load(): HeatwiseConfig = HeatwiseConfig(
-    sys.env.getOrElse("OCTOPUS_PRODUCT_CODE", "AGILE-24-10-01"),
-    sys.env.getOrElse("OCTOPUS_TARIFF_CODE", "E-1R-AGILE-24-10-01-J"),
-    sys.env.getOrElse("RELAY_HOST", "192.168.1.50"),
-    BigDecimal(sys.env.getOrElse("MAX_PRICE_PER_KWH", "10")),
-    sys.env.get("MORNING_PREHEAT"),
-    sys.env.get("DUMMY_RUN").forall(_.toBoolean),
-    sys.env.get("CHECK_INTERVAL").map(Duration.create(_).asInstanceOf[FiniteDuration]).getOrElse(3.minutes)
-  )
+
+  implicit def hint[A]: ProductHint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, CamelCase))
+
+
+  given reader: ConfigReader[HeatwiseConfig] = deriveReader
+  
+  def loadOrThrow(): HeatwiseConfig = {
+    ConfigSource.default.at("heatwise").load[HeatwiseConfig] match {
+      case Right(cfg) => cfg
+      case Left(errs: ConfigReaderFailures) =>
+        sys.error(s"Invalid Heatwise config: ${errs.toList.map(_.description).mkString("; ")}")
+    }
+  }
 }

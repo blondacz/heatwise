@@ -23,7 +23,7 @@ object Main {
 
 
   def main(args: Array[String]): Unit = {
-    val cfg = HeatwiseConfig.load()
+    val cfg = HeatwiseConfig.loadOrThrow()
     given clock: Clock = Clock.systemUTC()
     system.log.info(s"Starting with config: $cfg")
 
