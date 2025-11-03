@@ -1,0 +1,76 @@
+image:
+  repository: ghcr.io/blondacz/heatwise
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Pull secret(s) for private GHCR
+imagePullSecrets: []   # e.g. [{ name: ghcr-creds }]
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  RELAY_HOST: "192.168.1.50"
+  MAX_PRICE_PER_KWH: "6.0"
+  MORNING_PREHEAT: "07:00"
+  DUMMY_RUN: "true"
+  CHECK_INTERVAL: "1 minute"
+
+javaToolOptions: "-Dconfig.override_with_env_vars=true"
+
+persistence:
+  enabled: true
+  mountPath: /data
+  size: 1Gi
+  storageClass: ""
+
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  labels: {}
+  interval: 30s
+  scrapeTimeout: 10s
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: heatwise.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+podAnnotations: {}
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 0
+  fsGroupChangePolicy: Always
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsUser: 10001
+  runAsGroup: 0
+  capabilities:
+    drop: ["ALL"]

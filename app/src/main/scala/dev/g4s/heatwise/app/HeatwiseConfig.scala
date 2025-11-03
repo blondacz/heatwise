@@ -2,16 +2,21 @@ package dev.g4s.heatwise.app
 
 import scala.concurrent.duration.*
 import pureconfig.*
+import pureconfig.ConvertHelpers.*
 import pureconfig.error.ConfigReaderFailures
 import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.*
+import pureconfig.configurable.*
+
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 final case class HeatwiseConfig(
     productCode: String,
     tariffCode: String,
     relayHost: String,
     maxPricePerKWh: BigDecimal,
-    morningPreheat: Option[String],
+    morningPreheat: Option[LocalTime],
     dummyRun: Boolean = true,
     checkInterval: FiniteDuration = 1.minute
 )
@@ -20,7 +25,7 @@ object HeatwiseConfig {
 
   implicit def hint[A]: ProductHint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, CamelCase))
 
-
+  given localTimeReader: ConfigReader[LocalTime] = localTimeConfigConvert(DateTimeFormatter.ofPattern("HH:mm"))
   given reader: ConfigReader[HeatwiseConfig] = deriveReader
   
   def loadOrThrow(): HeatwiseConfig = {

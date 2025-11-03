@@ -18,11 +18,10 @@ java {
     }
 }
 
-tasks.register("echo") {
-    doLast {
-        println("Hello, world!")
-    }
-}
+//Gradle issue: https://github.com/gradle/gradle/issues/17236
+tasks.processResources { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
+tasks.jar { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
+// \Gradle issue
 
 val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 

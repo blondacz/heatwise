@@ -1,0 +1,8 @@
+1. Verify the pod and forward the port:
+   kubectl get pods -l app.kubernetes.io/name={{ include "heatwise.name" . }}
+   kubectl port-forward deploy/{{ include "heatwise.name" . }} 8080:8080
+
+2. Health & metrics:
+   curl http://localhost:8080/live
+   curl http://localhost:8080/ready
+   curl http://localhost:8080/metrics

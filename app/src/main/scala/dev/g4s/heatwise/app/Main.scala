@@ -29,7 +29,7 @@ object Main {
 
     val policy = Policy(
       maxPricePerKWh = cfg.maxPricePerKWh,
-      morningPreheat = cfg.morningPreheat.map(s => PreheatBefore(LocalTime.parse(s), JDuration.ofMinutes(30))),
+      morningPreheat = cfg.morningPreheat.map(s => PreheatBefore(s, JDuration.ofMinutes(30))),
       delay = Delay()
     )
 

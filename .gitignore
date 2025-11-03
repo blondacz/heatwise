@@ -22,3 +22,6 @@ out/
 build
 
 project.md
+/decisions/2025-11-01.log
+/decisions/2025-11-02.log
+/docs/content/diagrams/basic.svg
