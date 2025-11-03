@@ -18,5 +18,8 @@ dependencies {
     implementation(libs.sttp.core)
 
     testImplementation(libs.pekko.testkit)
+
+    testImplementation(libs.pekko.stream.testkit)
+    testImplementation(libs.pekko.http.testkit)
 }
 
