@@ -39,9 +39,9 @@ object Main {
 
     Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry))
 
-    val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life"), ReadinessCheck("price-ready")),
+    val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life", 10.minutes), ReadinessCheck("price-ready")),
       LiveRelayService,
-      new LiveAuditService(LivenessCheck("audit-life"), ReadinessCheck("audit-ready")),
+      new LiveAuditService(LivenessCheck("audit-life", 10.minutes), ReadinessCheck("audit-ready")),
       new LiveCylinderTemperatureService)
     val run = app.run(cfg, policy)
 

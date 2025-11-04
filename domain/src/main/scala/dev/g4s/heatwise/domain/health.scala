@@ -1,9 +1,10 @@
 package dev.g4s.heatwise.domain
 
-import java.time.{Clock, Instant}
+import java.time.{Clock, Duration, Instant}
 import java.util.concurrent.{ConcurrentHashMap, CopyOnWriteArrayList}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import scala.jdk.CollectionConverters.*
+import scala.concurrent.duration.FiniteDuration
 
 trait Liveness {
   def isAlive: Boolean
@@ -27,6 +28,7 @@ case class HealthResult (
 
 object HealthResult {
   def notChecked(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Warning("Not checked yet"))
+  def tooOld(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Error("Original check too old"))
 
   def healthy(msg: String)(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Ok(msg))
   def warn(msg: String)(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Warning(msg))
@@ -36,13 +38,14 @@ sealed trait HealthCheck {
   protected val healthRegistry :HealthRegistry
   def name: String
   def update(result: HealthResult): Unit = healthRegistry.notify(this, result)
+  def update(status: HealthStatus)(using clock: Clock) : Unit = update(HealthResult(clock.instant(), status))
 }
 
 case class ReadinessCheck( name : String)(using clock: Clock, protected val healthRegistry: HealthRegistry) extends HealthCheck {
   healthRegistry.notify(this,HealthResult.notChecked)
 }
 
-case class LivenessCheck( name : String)(using clock: Clock, protected val healthRegistry: HealthRegistry) extends HealthCheck {
+case class LivenessCheck(name : String, maxAge: FiniteDuration)(using clock: Clock, protected val healthRegistry: HealthRegistry) extends HealthCheck {
  healthRegistry.notify(this, HealthResult.notChecked)
 }
 
@@ -60,7 +63,16 @@ class SimpleHealthRegistry(using clock: Clock) extends HealthRegistry {
   }
 
   override def isAlive: Boolean = {
-    checks.asScala.map((k,v) => (k,v.status) ).collect{case (a: LivenessCheck, b: HealthStatus.Error) => a}.isEmpty
+    val now = clock.instant()
+    checks.asScala
+      .collect { case (check: LivenessCheck, HealthResult(timestamp, status)) =>
+        val age = Duration.between(timestamp, now)
+        val maxPeriodMillis = check.maxAge.toMillis
+        if (age.toMillis <= maxPeriodMillis) Some(check -> status) else Some(check -> HealthStatus.Error(s"Check ${check.name} is too old: $age"))
+      }
+      .flatten
+      .collect{ case (a: LivenessCheck, HealthStatus.Error(_)) => false}
+      .isEmpty
   }
 
   override def isReady: Boolean = {

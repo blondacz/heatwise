@@ -9,6 +9,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 import java.time.{Clock, Instant, ZoneOffset}
+import scala.concurrent.duration.*
 
 class HealthRoutesTest extends AnyFreeSpec with Matchers with ScalatestRouteTest {
 
@@ -19,7 +20,7 @@ class HealthRoutesTest extends AnyFreeSpec with Matchers with ScalatestRouteTest
   "HealthRoutes" - {
     "/live" - {
       "should return OK when all liveness checks pass" in {
-        val livenessCheck = LivenessCheck("test-liveness")
+        val livenessCheck = LivenessCheck("test-liveness", 5.minutes)
         livenessCheck.update(HealthResult.healthy("All good"))
 
         val routes = HealthRoutes.routes(registry, registry)
@@ -32,7 +33,7 @@ class HealthRoutesTest extends AnyFreeSpec with Matchers with ScalatestRouteTest
 
       "should return 500 when liveness checks fail" in {
         val registry = SimpleHealthRegistry()
-        val livenessCheck = LivenessCheck("test-liveness")(using clock, registry)
+        val livenessCheck = LivenessCheck("test-liveness", 5.minutes)(using clock, registry)
         livenessCheck.update(HealthResult(clock.instant(), HealthStatus.Error("Service down")))
 
         val routes = HealthRoutes.routes(registry, registry)
