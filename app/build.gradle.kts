@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":adapters:octopus"))
     implementation(project(":adapters:audit"))
     implementation(project(":adapters:relay"))
+    implementation(project(":adapters:cylinder-temperature"))
     implementation(libs.pekko.http)
     implementation(libs.pekko.http.backend)
     implementation(libs.pekko.stream)

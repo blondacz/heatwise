@@ -7,6 +7,7 @@ include(
     "adapters:octopus",
     "adapters:relay",
     "adapters:audit",
+    "adapters:cylinder-temperature",
     "docs"
 )
 

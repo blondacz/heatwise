@@ -13,6 +13,7 @@ import dev.g4s.heatwise.adapters.octopus.OctopusClient
 import dev.g4s.heatwise.adapters.relay.*
 import dev.g4s.heatwise.audit.DecisionLog
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.stream.SourceShape
 import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.{Done, NotUsed}
 
@@ -25,7 +26,8 @@ import sttp.client4.pekkohttp.*
 class HeatwiseApp(
     priceService: PriceService,
     relayService: RelayService,
-    auditService: AuditService
+    auditService: AuditService,
+    temperatureService: CylinderTemperatureService
 )(using system: ActorSystem, backend: Backend[Future]) {
 
   import system.dispatcher
@@ -35,18 +37,30 @@ class HeatwiseApp(
       priceService.fetchCurrentPrice(cfg, ZonedDateTime.now())
     }
 
-  def decisionStream(priceSource: Source[PricePoint, Cancellable] , policy: Policy)(using clock: Clock): Source[Decision, Cancellable] =
-    priceSource
-      .statefulMap(() => Option.empty[(Instant, Boolean)])(
-        (lastChange, p) => {
-          val d = Decide.decide(clock, p, lastChange, policy)
+
+  def combinedSource(cfg: HeatwiseConfig): Source[(PricePoint, Temperature), NotUsed]  =
+    Source.fromGraph(GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+      val zip = b.add(ZipLatest[PricePoint, Temperature]())
+      priceSource(cfg) ~> zip.in0
+      temperatureService.fetchCurrentTemperature(cfg) ~> zip.in1
+      SourceShape(zip.out)
+    }).dropRepeated() //FIXME: dropRepeated maye interfere with hysteresis, may need to change tests and drop
+    
+    
+  def decisionStream(combinedSource: Source[(PricePoint, Temperature), NotUsed] , policy: Policy)(using clock: Clock): Source[Decision, NotUsed] =
+    combinedSource
+      .statefulMap(() => Option.empty[(Instant, Boolean)]) (
+        { case (lastChange, (price, temp)) => 
+          val d = Decide.decide(clock, price, temp, lastChange, policy)
           val lc = if (lastChange.forall(_._2 != d.heatOn)) Some((d.ts, d.heatOn)) else lastChange
           (lc, d)
         },
         _ => None
-      )
+  )
+      
 
-  def executionStream(cfg: HeatwiseConfig, decisions: Source[Decision, Cancellable]): Source[Unit, Cancellable] =
+  def executionStream(cfg: HeatwiseConfig, decisions: Source[Decision, NotUsed]): Source[Unit, NotUsed] =
     decisions.mapAsync(1) { d =>
       val f = relayService.switchRelay(cfg.relayHost, d.heatOn, cfg.dummyRun)
       f.collect {
@@ -60,5 +74,5 @@ class HeatwiseApp(
     }
 
   def run(cfg: HeatwiseConfig, policy: Policy)(using clock: Clock): Future[Done] =
-    executionStream(cfg, decisionStream(priceSource(cfg),policy)).toMat(Sink.ignore)(Keep.right).run()
+    executionStream(cfg, decisionStream(combinedSource(cfg),policy)).toMat(Sink.ignore)(Keep.right).run()
 }

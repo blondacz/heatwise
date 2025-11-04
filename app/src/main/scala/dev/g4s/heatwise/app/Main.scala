@@ -31,14 +31,18 @@ object Main {
     val policy = Policy(
       maxPricePerKWh = cfg.maxPricePerKWh,
       morningPreheat = cfg.morningPreheat.map(s => PreheatBefore(s, JDuration.ofMinutes(30))),
+      desiredTemperature = Temperature(cfg.desiredTemperature),
       delay = Delay()
     )
-    
+
     given healthRegistry : HealthRegistry = new SimpleHealthRegistry()
 
     Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry))
 
-    val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life"), ReadinessCheck("price-ready")), LiveRelayService, new LiveAuditService(LivenessCheck("audit-life"), ReadinessCheck("audit-ready")))
+    val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life"), ReadinessCheck("price-ready")),
+      LiveRelayService,
+      new LiveAuditService(LivenessCheck("audit-life"), ReadinessCheck("audit-ready")),
+      new LiveCylinderTemperatureService)
     val run = app.run(cfg, policy)
 
     run.onComplete(_ => system.terminate())

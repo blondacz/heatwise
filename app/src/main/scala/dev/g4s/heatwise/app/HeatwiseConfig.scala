@@ -17,6 +17,7 @@ final case class HeatwiseConfig(
     relayHost: String,
     maxPricePerKWh: BigDecimal,
     morningPreheat: Option[LocalTime],
+    desiredTemperature: BigDecimal,
     dummyRun: Boolean = true,
     checkInterval: FiniteDuration = 1.minute
 )
