@@ -26,6 +26,7 @@ object PricePoint {
 case class Temperature(value: BigDecimal)
 
 final case class Decision(ts: Instant, heatOn: Boolean, reason: DecisionReason)
+final case class ControllerState(lastChangeTs: Instant, lastOn: Boolean)
 
 sealed trait DecisionReason
 
@@ -53,12 +54,12 @@ object Decide {
   import DecisionReason.*
 
 
-  def decide(clock: Clock, price: PricePoint, currentTemperature: Temperature, lastOnChange: Option[(Instant, Boolean)], policy: Policy): Decision = {
+  def decide(clock: Clock, price: PricePoint, currentTemperature: Temperature, lastOnChange: Option[ControllerState], policy: Policy): Decision = {
     if (currentTemperature.value < policy.desiredTemperature.value) {
       val slotOk = price.pricePerKWh <= policy.maxPricePerKWh
       val now = clock.instant()
       val delayOk = lastOnChange match {
-        case Some((changedAt, wasOn)) =>
+        case Some(ControllerState(changedAt, wasOn)) =>
           val mins = between(changedAt, now).toMinutes
           if (wasOn) mins >= policy.delay.minOffMinutes else mins >= policy.delay.minOnMinutes
         case None => true
@@ -70,7 +71,7 @@ object Decide {
         else if (!slotOk)
           Decision(now, false, PriceTooHigh(price.pricePerKWh, policy.maxPricePerKWh))
         else
-          Decision(now, false, DelayTooShort(policy.delay, lastOnChange.get._1))
+          Decision(now, false, DelayTooShort(policy.delay, lastOnChange.get.lastChangeTs))
       } { case p@PreheatBefore(readyBy, duration) =>
         val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC)
         val localReadyBy = LocalDateTime.ofInstant(now, ZoneOffset.UTC).`with`(readyBy)

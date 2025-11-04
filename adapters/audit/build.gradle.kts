@@ -4,6 +4,9 @@ plugins {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(libs.bundles.circe)
+    implementation(libs.pekko.kafka)
+
 }
 
 

@@ -1,5 +1,6 @@
 package dev.g4s.heatwise.app
 
+import dev.g4s.heatwise.audit.KafkaLog
 import dev.g4s.heatwise.domain.*
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.apache.pekko.stream.SourceShape
@@ -36,31 +37,35 @@ class HeatwiseApp(
     }).dropRepeated() //FIXME: dropRepeated maye interfere with hysteresis, may need to change tests and drop
     
     
-  def decisionStream(combinedSource: Source[(PricePoint, Temperature), NotUsed] , policy: Policy)(using clock: Clock): Source[Decision, NotUsed] =
+  def decisionStream(cs: Option[ControllerState], combinedSource: Source[(PricePoint, Temperature), NotUsed] , policy: Policy)(using clock: Clock): Source[(ControllerState,Decision), NotUsed] =
     combinedSource
-      .statefulMap(() => Option.empty[(Instant, Boolean)]) (
+      .statefulMap(() => cs) (
         { case (lastChange, (price, temp)) => 
           val d = Decide.decide(clock, price, temp, lastChange, policy)
-          val lc = if (lastChange.forall(_._2 != d.heatOn)) Some((d.ts, d.heatOn)) else lastChange
-          (lc, d)
+          val lc = if (lastChange.forall(_.lastOn != d.heatOn)) Some(ControllerState(d.ts, d.heatOn)) else lastChange
+          (lc, (lc.get,d))//get here is safe but not that nice
         },
         _ => None
   )
       
 
-  def executionStream(cfg: HeatwiseConfig, decisions: Source[Decision, NotUsed]): Source[Unit, NotUsed] =
-    decisions.mapAsync(1) { d =>
+  def executionStream(cfg: HeatwiseConfig, decisions: Source[(ControllerState,Decision), NotUsed]): Source[Unit, NotUsed] =
+    decisions.mapAsync(1) { case (s,d) =>
       val f = relayService.switchRelay(cfg.relayHost, d.heatOn, cfg.dummyRun)
       f.collect {
         case Left(value) =>
           system.log.error(value, s"Failed to switch relay for decision: $d")
-          auditService.logDecision(d)
+          auditService.logDecision(s,d)//FIXME: log failures to change and maybe do not log the desired state?
         case Right(value) =>
           system.log.info(s"Switch relay for decision: $d switch: $value")
-          auditService.logDecision(d)
+          auditService.logDecision(s, d)
       }
     }
 
-  def run(cfg: HeatwiseConfig, policy: Policy)(using clock: Clock): Future[Done] =
-    executionStream(cfg, decisionStream(combinedSource(cfg),policy)).toMat(Sink.ignore)(Keep.right).run()
+  def run(cfg: HeatwiseConfig, policy: Policy)(using clock: Clock): Future[Done] = {
+    auditService.start()
+    auditService.restoreState().flatMap(cs =>
+      executionStream(cfg, decisionStream(cs, combinedSource(cfg),policy)).toMat(Sink.ignore)(Keep.right).run()
+    )
+  }
 }

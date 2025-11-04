@@ -41,7 +41,7 @@ object Main {
 
     val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life", 10.minutes), ReadinessCheck("price-ready")),
       LiveRelayService,
-      new LiveAuditService(LivenessCheck("audit-life", 10.minutes), ReadinessCheck("audit-ready")),
+      new FileAuditService(LivenessCheck("audit-life", 10.minutes), ReadinessCheck("audit-ready")),
       new LiveCylinderTemperatureService)
     val run = app.run(cfg, policy)
 

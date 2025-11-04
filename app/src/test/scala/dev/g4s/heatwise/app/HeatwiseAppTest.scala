@@ -1,10 +1,11 @@
 package dev.g4s.heatwise.app
 
+import dev.g4s.heatwise.audit.{HeatwiseKafkaConfig, Topics}
 import dev.g4s.heatwise.domain.*
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.apache.pekko.testkit.TestKit
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{BeforeAndAfterAll, Inside}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -21,7 +22,8 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
   with AnyFreeSpecLike
   with Matchers
   with BeforeAndAfterAll
-  with ScalaFutures {
+  with ScalaFutures
+  with Inside {
 
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
@@ -31,6 +33,8 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
     timeout = Span(15, Seconds),
     interval = Span(100, Millis)
   )
+
+  private val heatwiseKafkaConfig = HeatwiseKafkaConfig("localhost:9092", "test-group", Topics("a","b"),"all")
   
   given backend: Backend[Future] = PekkoHttpBackend.usingActorSystem(system)
    private val lowTemp = BigDecimal(10)
@@ -38,8 +42,11 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
   "HeatwiseApp" - {
     "should make decisions based on price points" in {
       val fixedTime = Instant.parse("2024-01-01T10:00:00Z")
-      given clock : Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second)
+
+      given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
+
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second,
+        heatwiseKafkaConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25)),
@@ -52,30 +59,34 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val stubAuditService = new StubAuditService
       val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp))
 
-      val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None,  delay = Delay(), desiredTemperature = Temperature(BigDecimal(50)))
+      val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None, delay = Delay(), desiredTemperature = Temperature(BigDecimal(50)))
 
       val app = new HeatwiseApp(stubPriceService, stubRelayService, stubAuditService, stubTemperatureService)
 
-      val decisionsF = app.decisionStream(app.combinedSource(cfg), policy)
+      val decisionsF = app.decisionStream(None, app.combinedSource(cfg), policy)
         .take(3)
         .runWith(Sink.seq)
 
       whenReady(decisionsF) { decisions =>
-        decisions should have size 3
-        decisions(0).heatOn shouldBe true
-        decisions(0).reason shouldBe DecisionReason.PriceOk(BigDecimal(5), BigDecimal(10))
+        inside(decisions.toList) { case first :: second :: third :: Nil =>
 
-        decisions(1).heatOn shouldBe false
-        decisions(1).reason shouldBe DecisionReason.PriceTooHigh(BigDecimal(15), BigDecimal(10))
+          first._2.heatOn shouldBe true
+          first._2.reason shouldBe DecisionReason.PriceOk(BigDecimal(5), BigDecimal(10))
 
-        decisions(2).heatOn shouldBe false
+          second._2.heatOn shouldBe false
+          second._2.reason shouldBe DecisionReason.PriceTooHigh(BigDecimal(15), BigDecimal(10))
+
+          third._2.heatOn shouldBe false
+        }
       }
     }
 
     "should execute relay switches and log decisions" in {
       val fixedTime = Instant.parse("2024-01-01T10:00:00Z")
-      given clock : Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second)
+
+      given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
+
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25)),
@@ -92,25 +103,27 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val app = new HeatwiseApp(stubPriceService, stubRelayService, stubAuditService, stubTemperatureService)
 
       val combinedSrc = app.combinedSource(cfg)
-      val executionF = app.executionStream(cfg,app.decisionStream(combinedSrc,policy))
+      val executionF = app.executionStream(cfg, app.decisionStream(None, combinedSrc, policy))
         .take(2)
         .runWith(Sink.seq)
 
       whenReady(executionF) { _ =>
         stubRelayService.switches should have size 2
-        stubRelayService.switches(0) shouldBe (("192.168.1.50", true, true))
+        stubRelayService.switches.head shouldBe (("192.168.1.50", true, true))
         stubRelayService.switches(1) shouldBe (("192.168.1.50", false, true))
 
         stubAuditService.decisions should have size 2
-        stubAuditService.decisions(0).heatOn shouldBe true
+        stubAuditService.decisions.head.heatOn shouldBe true
         stubAuditService.decisions(1).heatOn shouldBe false
       }
     }
 
     "should handle relay errors gracefully" in {
       val fixedTime = Instant.parse("2024-01-01T10:00:00Z")
+
       given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second)
+
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25))
@@ -125,7 +138,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
       val app = new HeatwiseApp(stubPriceService, failingRelayService, stubAuditService, stubTemperatureService)
 
-      val executionF =  app.executionStream(cfg,app.decisionStream(app.combinedSource(cfg),policy))
+      val executionF = app.executionStream(cfg, app.decisionStream(None, app.combinedSource(cfg), policy))
         .take(1)
         .runWith(Sink.seq)
 
@@ -136,9 +149,11 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
     "should not switch on when temperature is high enough" in {
       val fixedTime = Instant.parse("2024-01-01T10:00:00Z")
-      given clock : Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
+
+      given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
+
       val highTemp = BigDecimal(60)
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, highTemp, dummyRun = true, checkInterval = 1.second)
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, highTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25))
@@ -153,14 +168,15 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
       val app = new HeatwiseApp(stubPriceService, stubRelayService, stubAuditService, stubTemperatureService)
 
-      val decisionsF = app.decisionStream(app.combinedSource(cfg), policy)
+      val decisionsF = app.decisionStream(None,app.combinedSource(cfg), policy)
         .take(1)
         .runWith(Sink.seq)
 
       whenReady(decisionsF) { decisions =>
-        decisions should have size 1
-        decisions(0).heatOn shouldBe false
-        decisions(0).reason shouldBe DecisionReason.TemperatureOk(Temperature(highTemp), Temperature(BigDecimal(50)))
+        inside(decisions.toList) { case (_, decision) :: Nil =>
+          decision.heatOn shouldBe false
+          decision.reason shouldBe DecisionReason.TemperatureOk(Temperature(highTemp), Temperature(BigDecimal(50)))
+        }
       }
     }
   }
@@ -192,10 +208,17 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
   class StubAuditService extends AuditService {
     val decisions: mutable.ListBuffer[Decision] = mutable.ListBuffer.empty
+    var state: Option[ControllerState] = None
 
-    def logDecision(decision: Decision): Unit = {
-      decisions += decision
+
+    override def logDecision(controllerState: ControllerState, d: Decision): Unit =  {
+      decisions += d
+      state = Some(controllerState)
     }
+
+    override def restoreState(): Future[Option[ControllerState]] = Future.successful(state)
+
+    override def start(): Unit = ()
   }
 
   class StubCylinderTemperatureService(temperature: Temperature) extends CylinderTemperatureService {

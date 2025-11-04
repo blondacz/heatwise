@@ -1,6 +1,12 @@
 [versions]
 
 [libraries]
+
+circe-core="io.circe:circe-core_3:0.14.15"
+circe-generic="io.circe:circe-generic_3:0.14.15"
+circe-parser="io.circe:circe-parser_3:0.14.15"
+
+
 sttp-circe='com.softwaremill.sttp.client4:circe_3:4.0.13'
 
 
@@ -19,6 +25,10 @@ pekko-stream='org.apache.pekko:pekko-stream_3:1.2.1'
 pekko-stream-testkit="org.apache.pekko:pekko-stream-testkit_3:1.2.1"
 pekko-actor='org.apache.pekko:pekko-actor-typed_3:1.2.1'
 
+pekko-kafka="org.apache.pekko:pekko-connectors-kafka_3:1.1.0"
+
+
+
 puml="net.sourceforge.plantuml:plantuml:1.2024.7"
 
 pureconfig-core="com.github.pureconfig:pureconfig-core_3:0.17.9"
@@ -31,6 +41,9 @@ scala="org.scala-lang:scala-library:3.3.4"
 scala-test="org.scalatest:scalatest_3:3.2.19"
 
 [bundles]
+circe = [
+    "circe-core", "circe-generic", "circe-parser"
+]
 
 
 [plugins]

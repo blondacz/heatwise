@@ -3,8 +3,7 @@ image:
   tag: latest
   pullPolicy: Always
 
-# Pull secret(s) for private GHCR
-imagePullSecrets: []   # e.g. [{ name: ghcr-creds }]
+imagePullSecrets: []
 
 replicaCount: 1
 
@@ -28,7 +27,7 @@ env:
   CHECK_INTERVAL: "1 minute"
   DESIRED_TEMPERATURE: "55.0"
 
-javaToolOptions: "-Dconfig.override_with_env_vars=false"
+javaToolOptions: "-Dconfig.override_with_env_vars=true"
 
 persistence:
   enabled: true

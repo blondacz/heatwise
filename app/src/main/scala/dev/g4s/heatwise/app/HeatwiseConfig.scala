@@ -1,5 +1,7 @@
 package dev.g4s.heatwise.app
 
+import dev.g4s.heatwise.audit.HeatwiseKafkaConfig
+
 import scala.concurrent.duration.*
 import pureconfig.*
 import pureconfig.ConvertHelpers.*
@@ -12,14 +14,15 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 final case class HeatwiseConfig(
-    productCode: String,
-    tariffCode: String,
-    relayHost: String,
-    maxPricePerKWh: BigDecimal,
-    morningPreheat: Option[LocalTime],
-    desiredTemperature: BigDecimal,
-    dummyRun: Boolean = true,
-    checkInterval: FiniteDuration = 1.minute
+                                 productCode: String,
+                                 tariffCode: String,
+                                 relayHost: String,
+                                 maxPricePerKWh: BigDecimal,
+                                 morningPreheat: Option[LocalTime],
+                                 desiredTemperature: BigDecimal,
+                                 dummyRun: Boolean = true,
+                                 checkInterval: FiniteDuration = 1.minute,
+                                 kafka: HeatwiseKafkaConfig
 )
 
 object HeatwiseConfig {
