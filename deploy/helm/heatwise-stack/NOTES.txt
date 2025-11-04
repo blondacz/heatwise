@@ -1,0 +1,11 @@
+Install fresh (recommended when switching to KRaft):
+  helm uninstall heatwise-stack || true
+  kubectl delete pvc -l app.kubernetes.io/instance=heatwise-stack || true
+
+Then:
+  helm dependency update deploy/helm/heatwise-stack
+  helm upgrade --install heatwise-stack deploy/helm/heatwise-stack
+
+KRaft clusterId in values.yaml:
+  kafka.kraft.clusterId: eXY51YRyw4xolN50glALvQ
+Keep this constant across upgrades.

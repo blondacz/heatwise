@@ -4,7 +4,7 @@ import dev.g4s.heatwise.domain.*
 import dev.g4s.heatwise.adapters.octopus.{LivePriceService, OctopusClient}
 import dev.g4s.heatwise.adapters.relay.*
 import dev.g4s.heatwise.adapters.cylinder.LiveCylinderTemperatureService
-import dev.g4s.heatwise.audit.{DecisionLog, FileAuditService}
+import dev.g4s.heatwise.audit.{DecisionLog, FileAuditService, KafkaAuditService}
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.stream.scaladsl.*
@@ -42,7 +42,7 @@ object Main {
 
     val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life", 10.minutes), ReadinessCheck("price-ready")),
       LiveRelayService,
-      new FileAuditService(LivenessCheck("audit-life", 10.minutes), ReadinessCheck("audit-ready")),
+      new KafkaAuditService(cfg.kafka),
       new LiveCylinderTemperatureService)
     val run = app.run(cfg, policy)
 
