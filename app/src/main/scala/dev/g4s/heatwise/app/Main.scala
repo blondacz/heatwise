@@ -1,9 +1,10 @@
 package dev.g4s.heatwise.app
 
 import dev.g4s.heatwise.domain.*
-import dev.g4s.heatwise.adapters.octopus.OctopusClient
+import dev.g4s.heatwise.adapters.octopus.{LivePriceService, OctopusClient}
 import dev.g4s.heatwise.adapters.relay.*
-import dev.g4s.heatwise.audit.DecisionLog
+import dev.g4s.heatwise.adapters.cylinder.LiveCylinderTemperatureService
+import dev.g4s.heatwise.audit.{DecisionLog, FileAuditService}
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.stream.scaladsl.*

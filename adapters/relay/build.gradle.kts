@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":domain"))
     implementation(libs.pekko.http)
     implementation(libs.pekko.actor)
     implementation(libs.pekko.stream)

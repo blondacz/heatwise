@@ -1,6 +1,5 @@
-package dev.g4s.heatwise.app
+package dev.g4s.heatwise.domain
 
-import dev.g4s.heatwise.audit.HeatwiseKafkaConfig
 
 import scala.concurrent.duration.*
 import pureconfig.*
@@ -12,6 +11,14 @@ import pureconfig.configurable.*
 
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+
+case class Topics(decisions: String, state: String)
+
+case class HeatwiseKafkaConfig(bootstrap: String,
+                               deviceId: String,
+                               topics :Topics,
+                               acks : String)
+
 
 final case class HeatwiseConfig(
                                  productCode: String,
@@ -31,7 +38,7 @@ object HeatwiseConfig {
 
   given localTimeReader: ConfigReader[LocalTime] = localTimeConfigConvert(DateTimeFormatter.ofPattern("HH:mm"))
   given reader: ConfigReader[HeatwiseConfig] = deriveReader
-  
+
   def loadOrThrow(): HeatwiseConfig = {
     ConfigSource.default.at("heatwise").load[HeatwiseConfig] match {
       case Right(cfg) => cfg

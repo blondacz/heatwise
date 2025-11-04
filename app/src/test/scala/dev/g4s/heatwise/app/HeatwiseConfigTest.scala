@@ -1,7 +1,9 @@
 package dev.g4s.heatwise.app
 
+import dev.g4s.heatwise.domain.HeatwiseConfig
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+
 import scala.concurrent.duration.*
 
 class HeatwiseConfigTest extends AnyFreeSpec with Matchers {

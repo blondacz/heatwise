@@ -1,7 +1,6 @@
 package dev.g4s.heatwise.app
 
-import dev.g4s.heatwise.audit.{HeatwiseKafkaConfig, Topics}
-import dev.g4s.heatwise.domain.*
+import dev.g4s.heatwise.domain.{HeatwiseKafkaConfig, Topics, *}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.apache.pekko.testkit.TestKit

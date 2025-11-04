@@ -1,8 +1,7 @@
 package dev.g4s.heatwise.audit
 
-import dev.g4s.heatwise.domain.{ControllerState, Decision, DecisionReason}
+import dev.g4s.heatwise.domain.{ControllerState, Decision, DecisionReason, HeatwiseKafkaConfig}
 import io.circe.{Decoder, Encoder}
-import io.circe.HCursor.fromJson
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.kafka.ProducerSettings
 import org.apache.pekko.kafka.scaladsl.SendProducer
@@ -22,12 +21,6 @@ import org.apache.pekko.stream.scaladsl.Sink
 import java.time.Instant
 import scala.concurrent.Future
 
-case class Topics(decisions: String, state: String)
-
-case class HeatwiseKafkaConfig(bootstrap: String,
-                               deviceId: String,
-                               topics :Topics,
-                               acks : String)
 
 class KafkaLog(cfg: HeatwiseKafkaConfig)(implicit sys: ActorSystem)  {
   private val settings =
