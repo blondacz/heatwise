@@ -1,27 +1,15 @@
 package dev.g4s.heatwise.app
 
-import dev.g4s.heatwise.domain.{Decide, Decision, Policy, PricePoint}
-import org.apache.pekko.Done
-import org.apache.pekko.actor.{ActorSystem, Cancellable}
-import org.apache.pekko.stream.scaladsl.{Keep, Sink, Source}
-import sttp.client4.Backend
-
-import java.time.{Clock, Instant, ZonedDateTime}
-import scala.concurrent.Future
 import dev.g4s.heatwise.domain.*
-import dev.g4s.heatwise.adapters.octopus.OctopusClient
-import dev.g4s.heatwise.adapters.relay.*
-import dev.g4s.heatwise.audit.DecisionLog
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.apache.pekko.stream.SourceShape
 import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.{Done, NotUsed}
-
-import java.time.{Duration as JDuration, *}
-import scala.concurrent.duration.*
-import scala.concurrent.{ExecutionContext, Future}
 import sttp.client4.*
-import sttp.client4.pekkohttp.*
+
+import java.time.{Clock, Instant, ZonedDateTime, Duration as JDuration}
+import scala.concurrent.Future
+import scala.concurrent.duration.*
 
 class HeatwiseApp(
     priceService: PriceService,
@@ -40,7 +28,7 @@ class HeatwiseApp(
 
   def combinedSource(cfg: HeatwiseConfig): Source[(PricePoint, Temperature), NotUsed]  =
     Source.fromGraph(GraphDSL.create() { implicit b =>
-      import GraphDSL.Implicits._
+      import GraphDSL.Implicits.*
       val zip = b.add(ZipLatest[PricePoint, Temperature]())
       priceSource(cfg) ~> zip.in0
       temperatureService.fetchCurrentTemperature(cfg) ~> zip.in1

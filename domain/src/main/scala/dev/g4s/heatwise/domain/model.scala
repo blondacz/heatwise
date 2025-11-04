@@ -38,7 +38,7 @@ object DecisionReason {
   final case class TemperatureOk(currentTemperature: Temperature, desiredTemperature: Temperature) extends DecisionReason
 }
 
-final case class Delay(minOnMinutes: Int = 15, minOffMinutes: Int = 10)
+final case class Delay(minOnMinutes: Int = 2, minOffMinutes: Int = 1)
 final case class PreheatBefore(readyBy: LocalTime, duration: Duration)
 
 final case class Policy(maxPricePerKWh: BigDecimal,
