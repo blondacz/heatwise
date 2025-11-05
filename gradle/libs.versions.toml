@@ -40,6 +40,9 @@ sttp-pekko-backend='com.softwaremill.sttp.client4:pekko-http-backend_3:4.0.13'
 scala="org.scala-lang:scala-library:3.3.4"
 scala-test="org.scalatest:scalatest_3:3.2.19"
 
+testcontainers-core="org.testcontainers:testcontainers:1.20.4"
+testcontainers-kafka="org.testcontainers:kafka:1.20.4"
+
 [bundles]
 circe = [
     "circe-core", "circe-generic", "circe-parser"
