@@ -38,7 +38,7 @@ object Main {
 
     given healthRegistry : HealthRegistry = new SimpleHealthRegistry()
 
-    Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry, Map("config" -> cfg.toString), cfg))
+    Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry, Map("config" -> sys.props.mkString(","), "startedAt" -> clock.instant().toString), cfg))
 
     val app = new HeatwiseApp(
       new LivePriceService(LivenessCheck("price", 20.minutes), ReadinessCheck("price")),

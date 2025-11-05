@@ -12,6 +12,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class LiveCylinderTemperatureService(livenessCheck: LivenessCheck, readinessCheck: ReadinessCheck)(using clock: Clock) extends CylinderTemperatureService  {
   readinessCheck.update(HealthResult.healthy("Ready to serve")) 
   override def fetchCurrentTemperature(cfg: HeatwiseConfig)(using system: ActorSystem, backend: Backend[Future], executionContext: ExecutionContext): Source[Temperature,Cancellable] = {
-    TemperatureSensor.temperature.wireTap(t => livenessCheck.update(Ok("Last reported temperature: $t")))
+    TemperatureSensor.temperature.wireTap(t => livenessCheck.update(Ok(s"Last reported temperature: $t")))
   }
 }

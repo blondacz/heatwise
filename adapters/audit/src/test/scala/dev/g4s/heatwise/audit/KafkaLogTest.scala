@@ -2,7 +2,6 @@ package dev.g4s.heatwise.audit
 
 import dev.g4s.heatwise.domain.*
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.stream.scaladsl.Sink
 import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
@@ -12,8 +11,7 @@ import org.scalatest.time.{Seconds, Span}
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 
-import java.time.{Instant, LocalTime}
-import scala.concurrent.duration.*
+import java.time.Instant
 
 class KafkaLogTest
     extends TestKit(ActorSystem("KafkaLogTest"))
