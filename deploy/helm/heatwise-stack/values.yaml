@@ -1,27 +1,35 @@
 kafka:
-  kraft:
-    enabled: true
-    clusterId: "eXY51YRyw4xolN50glALvQ"
-  zookeeper:
+  image:
+    repository: apache/kafka
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  storage:
     enabled: false
-  controller:
-    replicaCount: 1
-  broker:
-    replicaCount: 1
-  configurationOverrides:
-    "listeners": PLAINTEXT://:9092
-    "advertised.listeners": PLAINTEXT://kafka:9092
-    "listener.security.protocol.map": PLAINTEXT:PLAINTEXT
-  persistence:
-    enabled: true
     size: 5Gi
+    storageClass: ""
+  service:
+    type: ClusterIP
+    port: 9092
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  # clusterId must remain stable across upgrades
+  clusterId: "W5rnOD84VCyfU6lXqFXPzA"
+  # Listener advertised host: service name works in-cluster
+  advertisedHost: "kafka"
+  advertisedPort: 9092
+  nodePort: 0  # set if you change service.type to NodePort
 
 heatwise:
   image:
     repository: ghcr.io/blondacz/heatwise
     tag: latest
     pullPolicy: Always
-
   env:
     HEATWISE__KAFKA__BOOTSTRAP: "kafka:9092"
     HEATWISE__KAFKA__DEVICEID: "cylinder-1"
@@ -29,7 +37,6 @@ heatwise:
     HEATWISE__KAFKA__TOPICS__STATE: "heatwise.state"
     HEATWISE__KAFKA__ACKS: "all"
     HEATWISE__AUDIT__FILE__ENABLED: "false"
-
   persistence:
     enabled: true
     mountPath: /data

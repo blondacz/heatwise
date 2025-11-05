@@ -1,14 +1,10 @@
 apiVersion: v2
 name: heatwise-stack
-description: Heatwise app + Kafka (KRaft, no ZooKeeper)
+description: Heatwise app + minimal Apache Kafka (KRaft) using docker.io/apache/kafka
 type: application
-version: 0.2.0
+version: 0.4.0
 
 dependencies:
-  - name: kafka
-    version: 28.2.0
-    repository: https://charts.bitnami.com/bitnami
-    alias: kafka
   - name: heatwise
     version: 0.1.0
     repository: "file://../heatwise"
