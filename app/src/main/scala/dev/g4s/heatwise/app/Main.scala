@@ -38,12 +38,13 @@ object Main {
 
     given healthRegistry : HealthRegistry = new SimpleHealthRegistry()
 
-    Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry))
+    Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry, Map("config" -> cfg.toString), cfg))
 
-    val app = new HeatwiseApp(new LivePriceService(LivenessCheck("price-life", 10.minutes), ReadinessCheck("price-ready")),
-      LiveRelayService,
-      new KafkaAuditService(cfg.kafka),
-      new LiveCylinderTemperatureService)
+    val app = new HeatwiseApp(
+      new LivePriceService(LivenessCheck("price-life", 10.minutes), ReadinessCheck("price-ready")),
+      new LiveRelayService(LivenessCheck("relay-life", 10.minutes), ReadinessCheck("relay-ready")),
+      new KafkaAuditService(cfg.kafka, LivenessCheck("kafka-audit", 10.minutes), ReadinessCheck("kafka-audit")),
+      new LiveCylinderTemperatureService(LivenessCheck("cylinder-temperature", 10.minutes), ReadinessCheck("cylinder-temperature")))
     val run = app.run(cfg, policy)
 
     run.onComplete(_ => system.terminate())

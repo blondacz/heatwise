@@ -13,6 +13,9 @@ dependencies {
     implementation(libs.pekko.http.backend)
     implementation(libs.pekko.stream)
     implementation(libs.pekko.actor)
+    implementation("com.github.pjfanning:pekko-http-circe_3:3.6.0")
+    implementation(libs.bundles.circe)
+
 
     implementation(libs.logback)
     implementation(libs.sttp.core)

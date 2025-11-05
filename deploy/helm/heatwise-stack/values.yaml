@@ -5,9 +5,9 @@ kafka:
     pullPolicy: IfNotPresent
   replicas: 1
   storage:
-    enabled: false
+    enabled: true
     size: 5Gi
-    storageClass: ""
+    storageClass: "standard"
   service:
     type: ClusterIP
     port: 9092
