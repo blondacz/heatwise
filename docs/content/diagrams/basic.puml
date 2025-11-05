@@ -4,16 +4,28 @@ skinparam shadowing false
 skinparam dpi 180
 
 actor User
+database "Cylinder Thermometer\n" as CT
+
 rectangle "Octopus Agile API" as Octopus
 node "Heatwise Service (Pekko Streams)" as App {
   [Price Poller] --> [Decision Logic]
   [Decision Logic] --> [Relay Adapter]
   [Decision Logic] --> [Decision Log]
+  [Cylinder Thermometer Poller] --> [Decision Logic]
 }
 node "Shelly/Contactor" as Relay
+
+node "Apache Kafka" as Kafka {
+  queue "decisions"
+  queue "state"
+}
 
 User --> App : configure thresholds
 Octopus --> [Price Poller] : HTTP JSON
 [Relay Adapter] --> Relay : HTTP (LAN)
-[Decision Log] --> "Append-only file" : CSV
+[Decision Log] ...> "Append-only file" : CSV : Switched Off
+[Decision Log] --> "decisions" : JSON
+[Decision Log] --> "state" : JSON
+[Decision Logic] <... "state" : State Recovery
+CT --> [Cylinder Thermometer Poller]
 @enduml
