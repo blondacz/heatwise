@@ -1,5 +1,6 @@
 package dev.g4s.heatwise.domain
 
+import org.scalatest.OneInstancePerTest
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -13,11 +14,56 @@ class MutableClock(var now: Instant, zone: ZoneId = ZoneOffset.UTC) extends Cloc
   override def withZone(zone: ZoneId): Clock =  new MutableClock(now, zone)
 }
 
-class SimpleHealthRegistryTest extends AnyFreeSpec with Matchers {
+class SimpleHealthRegistryTest extends AnyFreeSpec with Matchers with OneInstancePerTest {
   given clock : MutableClock = new MutableClock(Instant.EPOCH)
 
   "LivenessCheck with maxPeriod" - {
-    "should discard all checks that are older than max age" in {
+    "should fail when trying to register same checkl twice" in {
+      given registry: HealthRegistry = new SimpleHealthRegistry()
+
+      val lc1 = LivenessCheck("lc1", 10.seconds)
+      assertThrows[IllegalStateException](LivenessCheck("lc1", 10.seconds))
+    }
+
+    "checks should update themselves" in {
+      given registry: HealthRegistry = new SimpleHealthRegistry()
+
+      val lc1 = LivenessCheck("lc1", 10.seconds)
+      val lc2 = LivenessCheck("lc2", 10.seconds)
+      val rc1 = ReadinessCheck("rc1")
+      val rc2 = ReadinessCheck("rc2")
+
+      registry.isAlive shouldBe true
+      registry.isReady shouldBe false
+      val notChecked = HealthResult.notChecked
+      val notReady = HealthResult.notReady
+      registry.readinessDetails shouldBe Map("rc1" -> notReady, "rc2" -> notReady)
+      registry.livenessDetails shouldBe Map("lc1" -> notChecked, "lc2" -> notChecked)
+
+      //no clock change
+      lc1.update(HealthResult.healthy("OK1"))
+
+      registry.readinessDetails shouldBe Map("rc1" -> notReady, "rc2" -> notReady)
+      registry.livenessDetails shouldBe Map("lc1" -> HealthResult.healthy("OK1"), "lc2" -> notChecked)
+       clock.adjust(10.seconds)
+      lc1.update(HealthResult.healthy("OK2"))
+      rc1.update(HealthResult.healthy("OK2"))
+      rc2.update(HealthResult.healthy("OK2"))
+
+      registry.readinessDetails shouldBe Map("rc1" -> HealthResult.healthy("OK2"), "rc2" -> HealthResult.healthy("OK2"))
+      registry.livenessDetails shouldBe Map("lc1" -> HealthResult.healthy("OK2"), "lc2" -> notChecked)
+      registry.isAlive shouldBe true
+      registry.isReady shouldBe true
+      clock.adjust(1.seconds)
+      registry.isAlive shouldBe false
+      registry.isReady shouldBe true
+      lc2.update(HealthResult.healthy("OK3"))
+      registry.isAlive shouldBe true
+      registry.isReady shouldBe true
+
+    }
+
+    "should replace all liveness checks that are older than max age" in {
         given registry : HealthRegistry = new SimpleHealthRegistry()
         val check = LivenessCheck("check1", 10.seconds)
         registry.isAlive shouldBe true

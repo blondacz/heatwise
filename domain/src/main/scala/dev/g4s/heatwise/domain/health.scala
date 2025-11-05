@@ -28,6 +28,7 @@ case class HealthResult (
 
 object HealthResult {
   def notChecked(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Warning("Not checked yet"))
+  def notReady(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Error("Not ready yet"))
   def tooOld(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Error("Original check too old"))
 
   def healthy(msg: String)(using clock: Clock): HealthResult = HealthResult(clock.instant(), HealthStatus.Ok(msg))
@@ -41,22 +42,25 @@ sealed trait HealthCheck {
   def update(status: HealthStatus)(using clock: Clock) : Unit = update(HealthResult(clock.instant(), status))
 }
 
+
 case class ReadinessCheck( name : String)(using clock: Clock, protected val healthRegistry: HealthRegistry) extends HealthCheck {
-  healthRegistry.notify(this,HealthResult.notChecked)
+  healthRegistry.register(this,HealthResult.notReady).fold(e => throw e, _ => ())//TODO: not that happy about throwing exception here
 }
 
 case class LivenessCheck(name : String, maxAge: FiniteDuration)(using clock: Clock, protected val healthRegistry: HealthRegistry) extends HealthCheck {
- healthRegistry.notify(this, HealthResult.notChecked)
+ healthRegistry.register(this, HealthResult.notChecked).fold(e => throw e, _ => ())
 }
 
 trait HealthReporting extends Liveness with Readiness
 
 trait HealthRegistry extends HealthReporting {
+  def register(check: HealthCheck, healthResult: HealthResult):  Either[Throwable, Unit]
   def notify(check: HealthCheck, healthResult: HealthResult): Unit
 }
 
 class SimpleHealthRegistry(using clock: Clock) extends HealthRegistry {
   private val checks = new ConcurrentHashMap[HealthCheck, HealthResult]()
+
 
   def notify(check: HealthCheck, healthResult: HealthResult): Unit = {
     checks.put(check, healthResult)
@@ -86,5 +90,11 @@ class SimpleHealthRegistry(using clock: Clock) extends HealthRegistry {
   override def readinessDetails: Map[String, HealthResult] = checks.asScala.collect {
     case (a: ReadinessCheck, b: HealthResult) => a.name -> b
   }.toMap
+
+  override def register(check: HealthCheck, healthResult: HealthResult): Either[Throwable, Unit] = {
+    checks.asScala.keySet.find{c =>
+      check.name == c.name && check.getClass == c.getClass
+    }.map(c => new IllegalStateException(s"HealthCheck already exists => $c")).toLeft(notify(check, healthResult))
+  }
 }
 
