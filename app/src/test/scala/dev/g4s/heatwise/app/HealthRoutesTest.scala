@@ -85,7 +85,7 @@ class HealthRoutesTest extends AnyFreeSpec with Matchers with ScalatestRouteTest
 
         Get("/health") ~> routes ~> check {
           status shouldBe StatusCodes.OK
-          responseAs[String] shouldBe """{"live":{"test-readiness":{"timestamp":"2024-01-01T10:00:00Z","status":{"Ok":{"msg":"Ready to serve"}}}},"ready":{},"info":{},"heatwiseConfig":{"productCode":"AGILE-24-10-01","tariffCode":"E-1R-AGILE-24-10-01-J","relayHost":"192.168.1.50","maxPricePerKWh":6,"morningPreheat":null,"desiredTemperature":60,"dummyRun":true,"checkInterval":"1 minute","kafka":{"bootstrap":"kafka:9092","deviceId":"cylinder-1","topics":{"decisions":"heatwise.decisions","state":"heatwise.state"},"acks":"all"}}}"""
+          responseAs[String] shouldBe """{"live":{},"ready":{"test-readiness":{"timestamp":"2024-01-01T10:00:00Z","status":{"Ok":{"msg":"Ready to serve"}}}},"info":{},"heatwiseConfig":{"productCode":"AGILE-24-10-01","tariffCode":"E-1R-AGILE-24-10-01-J","relayHost":"192.168.1.50","maxPricePerKWh":6,"morningPreheat":null,"desiredTemperature":60,"dummyRun":true,"checkInterval":"1 minute","kafka":{"bootstrap":"kafka:9092","deviceId":"cylinder-1","topics":{"decisions":"heatwise.decisions","state":"heatwise.state"},"acks":"all"}}}""".stripMargin
         }
       }
 
