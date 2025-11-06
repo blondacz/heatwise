@@ -22,7 +22,7 @@ object HealthRoutes extends FailFastCirceSupport  {
   
   def routes(live: Liveness, ready: Readiness, info: Map[String,String], heatwiseConfig: HeatwiseConfig): Route =
     concat(
-      path("health")(complete(HealthReport(ready.readinessDetails, live.livenessDetails,info, heatwiseConfig))),
+      path("health")(complete(HealthReport(live.livenessDetails, ready.readinessDetails, info, heatwiseConfig))),
       path("live")(if (live.isAlive) complete("OK") else complete(500, s"NOT OK: ${live.livenessDetails.values.mkString(",")}")),
       path("ready") {
         if (ready.isReady) complete("READY") else complete(503, s"STALE: ${ready.readinessDetails.values.mkString(", ")}")

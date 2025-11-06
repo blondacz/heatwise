@@ -37,6 +37,9 @@ heatwise:
     HEATWISE__KAFKA__TOPICS__STATE: "heatwise.state"
     HEATWISE__KAFKA__ACKS: "all"
     HEATWISE__AUDIT__FILE__ENABLED: "false"
+    LOG_LEVEL: "INFO"
+    PEKKO_LOG_LEVEL: "INFO"
+    KAFKA_LOG_LEVEL: "WARN"
   persistence:
     enabled: true
     mountPath: /data
