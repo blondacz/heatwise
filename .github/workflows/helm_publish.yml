@@ -1,0 +1,19 @@
+name: Publish Helm (GHCR)
+on:
+  push:
+    tags: ["v*"]   # or on main with a chart version bump
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Package
+        run: helm package deploy/helm/heatwise-stack
+      - name: Login GHCR
+        run: echo "${{ github.token }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Push
+        run: helm push heatwise-stack-*.tgz oci://ghcr.io/${{ github.repository_owner }}
