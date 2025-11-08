@@ -1,7 +1,7 @@
 package dev.g4s.heatwise.app
 
 import com.github.pjfanning.pekkohttpcirce.FailFastCirceSupport
-import dev.g4s.heatwise.domain.{HealthResult, HeatwiseConfig, Liveness, Readiness}
+import dev.g4s.heatwise.domain.{HealthResult, HeatwiseConfig, Liveness, Readiness, TemperatureSensorConfig}
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
 
@@ -16,6 +16,7 @@ case class HealthReport(live: Map[String, HealthResult], ready: Map[String, Heal
 
 object HealthRoutes extends FailFastCirceSupport  {
   given fdEncoder : Encoder[FiniteDuration] = Encoder.encodeString.contramap[FiniteDuration](_.toString) 
+  given temperatureSensorConfigEncoder : Encoder[TemperatureSensorConfig] = Encoder.encodeString.contramap[TemperatureSensorConfig](_.path.toString)   
   given heatwiseConfigEncoder : Encoder[HeatwiseConfig] = deriveEncoder   
   given healthResultEncoder : Encoder[HealthResult] = deriveEncoder 
   given healthReportEncoder : Encoder[HealthReport] = deriveEncoder 

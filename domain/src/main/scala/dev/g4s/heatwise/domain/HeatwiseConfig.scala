@@ -11,15 +11,20 @@ import pureconfig.configurable.*
 
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.nio.file.Path
 
 case class Topics(decisions: String, state: String)
 
+//TODO: SOLID - create abstraction
 case class HeatwiseKafkaConfig(bootstrap: String,
                                deviceId: String,
                                topics :Topics,
                                acks : String)
 
+case class TemperatureSensorConfig(path: Path, checkInterval: FiniteDuration)
 
+
+//TODO: split to sub-config abstractions
 final case class HeatwiseConfig(
                                  productCode: String,
                                  tariffCode: String,
@@ -27,9 +32,10 @@ final case class HeatwiseConfig(
                                  maxPricePerKWh: BigDecimal,
                                  morningPreheat: Option[LocalTime],
                                  desiredTemperature: BigDecimal,
-                                 dummyRun: Boolean = true,
-                                 checkInterval: FiniteDuration = 1.minute,
-                                 kafka: HeatwiseKafkaConfig
+                                 dummyRun: Boolean,
+                                 checkInterval: FiniteDuration,
+                                 kafka: HeatwiseKafkaConfig,
+                                 temperatureSensorConfig: TemperatureSensorConfig
 )
 
 object HeatwiseConfig {

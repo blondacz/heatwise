@@ -1,6 +1,6 @@
 apiVersion: v2
 name: heatwise
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
 description: Pekko-based immersion heater controller using Octopus Agile prices
 type: application

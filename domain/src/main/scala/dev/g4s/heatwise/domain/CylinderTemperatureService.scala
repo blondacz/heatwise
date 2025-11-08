@@ -7,6 +7,6 @@ import sttp.client4.Backend
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CylinderTemperatureService  {
-  def fetchCurrentTemperature(cfg: HeatwiseConfig)(using system: ActorSystem, backend: Backend[Future], executionContext: ExecutionContext): Source[Temperature,Cancellable]
+  def fetchCurrentTemperature()(using system: ActorSystem, executionContext: ExecutionContext): Source[Temperature,Cancellable]
 
 }

@@ -44,3 +44,9 @@ heatwise:
     enabled: true
     mountPath: /data
     size: 1Gi
+  temperatureSensor:
+    enabled: true                # turn off to run without the file/volume
+    path: "/sys/devices/w1_bus_master1/28-0e24619f9b18/w1_slave"
+    w1:
+      hostPath: "/sys/devices/w1_bus_master1"
+      mountPath: "/sys/devices/w1_bus_master1"

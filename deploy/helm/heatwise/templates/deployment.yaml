@@ -42,6 +42,10 @@ spec:
             - name: {{ $k }}
               value: {{ $v | quote }}
             {{- end }}
+            {{- if .Values.temperatureSensor.enabled }}
+            - name: W1_PATH
+              value: {{ .Values.temperatureSensor.path | quote }}
+            {{- end }}
           readinessProbe:
             httpGet: { path: /ready, port: http }
             periodSeconds: 5
@@ -56,9 +60,20 @@ spec:
             - name: data
               mountPath: {{ .Values.persistence.mountPath }}
             {{- end }}
+            {{- if .Values.temperatureSensor.enabled }}
+            - name: w1
+              mountPath: {{ .Values.temperatureSensor.w1.mountPath }}
+              readOnly: true
+            {{- end }}
       {{- if .Values.persistence.enabled }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "heatwise.name" . }}-pvc
+      {{- if .Values.temperatureSensor.enabled }}
+        - name: w1
+          hostPath:
+            path: {{ .Values.temperatureSensor.w1.hostPath }}
+            type: Directory
+      {{- end }}
       {{- end }}

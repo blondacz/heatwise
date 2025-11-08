@@ -44,9 +44,12 @@ object Main {
       new LivePriceService(LivenessCheck("price", 20.minutes), ReadinessCheck("price")),
       new LiveRelayService(LivenessCheck("relay", 20.minutes), ReadinessCheck("relay")),
       new KafkaAuditService(cfg.kafka, LivenessCheck("kafka-audit", 20.minutes), ReadinessCheck("kafka-audit")),
-      new LiveCylinderTemperatureService(LivenessCheck("cylinder-temperature", 20.minutes), ReadinessCheck("cylinder-temperature")))
+      new LiveCylinderTemperatureService(cfg.temperatureSensorConfig, LivenessCheck("cylinder-temperature", 20.minutes), ReadinessCheck("cylinder-temperature")))
     val run = app.run(cfg, policy)
 
-    run.onComplete(_ => system.terminate())
+    run.onComplete(t => {
+      system.log.info(s"Shutting down with result: $t")
+      system.terminate()
+    })
   }
 }

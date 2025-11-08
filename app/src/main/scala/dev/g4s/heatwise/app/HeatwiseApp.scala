@@ -32,7 +32,7 @@ class HeatwiseApp(
       import GraphDSL.Implicits.*
       val zip = b.add(ZipLatest[PricePoint, Temperature]())
       priceSource(cfg) ~> zip.in0
-      temperatureService.fetchCurrentTemperature(cfg) ~> zip.in1
+      temperatureService.fetchCurrentTemperature() ~> zip.in1
       SourceShape(zip.out)
     }).dropRepeated() //FIXME: dropRepeated maye interfere with hysteresis, may need to change tests and drop
     

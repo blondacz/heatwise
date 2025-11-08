@@ -12,6 +12,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import sttp.client4.Backend
 import sttp.client4.pekkohttp.PekkoHttpBackend
 
+import java.nio.file.Paths
 import java.time.{Clock, Instant, ZoneOffset, ZonedDateTime}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,6 +35,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
   )
 
   private val heatwiseKafkaConfig = HeatwiseKafkaConfig("localhost:9092", "test-group", Topics("a","b"),"all")
+  private val temperatureSensorConfig = TemperatureSensorConfig(Paths.get("bla"), 100.millis)
   
   given backend: Backend[Future] = PekkoHttpBackend.usingActorSystem(system)
    private val lowTemp = BigDecimal(10)
@@ -45,7 +47,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
 
       val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second,
-        heatwiseKafkaConfig)
+        heatwiseKafkaConfig, temperatureSensorConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25)),
@@ -56,7 +58,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val stubPriceService = new StubPriceService(prices)
       val stubRelayService = new StubRelayService
       val stubAuditService = new StubAuditService
-      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp))
+      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp), cfg)
 
       val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None, delay = Delay(), desiredTemperature = Temperature(BigDecimal(50)))
 
@@ -85,7 +87,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
       given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
 
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig, temperatureSensorConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25)),
@@ -95,7 +97,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val stubPriceService = new StubPriceService(prices)
       val stubRelayService = new StubRelayService
       val stubAuditService = new StubAuditService
-      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp))
+      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp), cfg)
 
       val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None, desiredTemperature = Temperature(BigDecimal(50)), delay = Delay())
 
@@ -108,8 +110,8 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
       whenReady(executionF) { _ =>
         stubRelayService.switches should have size 2
-        stubRelayService.switches.head shouldBe (("192.168.1.50", true, true))
-        stubRelayService.switches(1) shouldBe (("192.168.1.50", false, true))
+        stubRelayService.switches.head shouldBe ("192.168.1.50", true, true)
+        stubRelayService.switches(1) shouldBe ("192.168.1.50", false, true)
 
         stubAuditService.decisions should have size 2
         stubAuditService.decisions.head.heatOn shouldBe true
@@ -122,7 +124,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
 
       given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
 
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, lowTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig, temperatureSensorConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25))
@@ -131,7 +133,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val stubPriceService = new StubPriceService(prices)
       val failingRelayService = new FailingRelayService
       val stubAuditService = new StubAuditService
-      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp))
+      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(lowTemp), cfg)
 
       val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None, desiredTemperature = Temperature(BigDecimal(50)), delay = Delay())
 
@@ -152,7 +154,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       given clock: Clock = Clock.fixed(fixedTime, ZoneOffset.UTC)
 
       val highTemp = BigDecimal(60)
-      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, highTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig)
+      val cfg = HeatwiseConfig("AGILE-24-10-01", "E-1R-AGILE-24-10-01-J", "192.168.1.50", BigDecimal(10), None, highTemp, dummyRun = true, checkInterval = 1.second, heatwiseKafkaConfig, temperatureSensorConfig)
 
       val prices = List(
         PricePoint(ZonedDateTime.parse("2024-01-01T10:00:00Z"), ZonedDateTime.parse("2024-01-01T10:30:00Z"), BigDecimal(5), BigDecimal(5.25))
@@ -161,7 +163,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
       val stubPriceService = new StubPriceService(prices)
       val stubRelayService = new StubRelayService
       val stubAuditService = new StubAuditService
-      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(highTemp))
+      val stubTemperatureService = new StubCylinderTemperatureService(Temperature(highTemp), cfg)
 
       val policy = Policy(maxPricePerKWh = BigDecimal(10), morningPreheat = None, desiredTemperature = Temperature(BigDecimal(50)), delay = Delay())
 
@@ -220,8 +222,8 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
     override def start(): Unit = ()
   }
 
-  class StubCylinderTemperatureService(temperature: Temperature) extends CylinderTemperatureService {
-    def fetchCurrentTemperature(cfg: HeatwiseConfig)(using system: ActorSystem, backend: Backend[Future], executionContext: ExecutionContext): Source[Temperature, org.apache.pekko.actor.Cancellable] = {
+  class StubCylinderTemperatureService(temperature: Temperature, cfg: HeatwiseConfig) extends CylinderTemperatureService {
+    def fetchCurrentTemperature()(using system: ActorSystem, executionContext: ExecutionContext): Source[Temperature, org.apache.pekko.actor.Cancellable] = {
       org.apache.pekko.stream.scaladsl.Source.tick(0.seconds, cfg.checkInterval, temperature)
     }
   }
