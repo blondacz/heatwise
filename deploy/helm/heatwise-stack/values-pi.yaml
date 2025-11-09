@@ -1,19 +1,19 @@
-# values-pi.yaml
+# Minimal Pi overrides
 nodeSelector:
   kubernetes.io/arch: arm64
 
-resources:
-  requests:
-    cpu: 50m
-    memory: 128Mi
-
 kafka:
-  persistence:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+  storage:
     enabled: true
     size: 5Gi
-    storageClass: local-path
-zookeeper:
-  persistence:
-    enabled: true
-    size: 5Gi
-    storageClass: local-path
+    storageClass: local-path      # <= k3s default provisioner
+
