@@ -13,7 +13,7 @@ jobs:
       - uses: azure/setup-helm@v4
       - name: Vendor subcharts
         run: |
-          cd heatwise-stack
+          cd deploy/helm/heatwise-stack
           helm dependency update
           helm package .
       - name: Login GHCR
