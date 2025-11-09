@@ -1,0 +1,19 @@
+# values-pi.yaml
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+kafka:
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: local-path
+zookeeper:
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: local-path
