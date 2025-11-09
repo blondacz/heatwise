@@ -7,4 +7,4 @@ version: 0.4.0
 dependencies:
   - name: heatwise
     version: 0.2.0
-    repository: "file://../heatwise"
+    repository: "file://./charts/heatwise"

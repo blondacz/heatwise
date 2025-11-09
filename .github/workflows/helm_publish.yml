@@ -11,8 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
-      - name: Package
-        run: helm package deploy/helm/heatwise-stack
+      - name: Vendor subcharts
+        run: |
+          cd heatwise-stack
+          helm dependency update
+          helm package .
       - name: Login GHCR
         run: echo "${{ github.token }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Push
