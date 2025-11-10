@@ -2,9 +2,10 @@ name: Build & Publish (Reckon + Docker + Helm)
 
 on:
   push:
-    branches: [ main ]
-    tags:     [ 'v*' ]
-  workflow_dispatch: {}
+    branches: [ "main" ]
+    tags:
+      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,44 +14,51 @@ permissions:
 env:
   IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/heatwise
   CHART_DIR: deploy/helm/heatwise-stack
-  OCI_REPO:  ghcr.io/${{ github.repository_owner }}
-  JAVA_VERSION: '21'
+  OCI_REPO: ghcr.io/${{ github.repository_owner }}
+  JAVA_VERSION: "21"
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }    # Reckon needs tags
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/gradle-build-action@v3
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v3
 
-      # Decide stage automatically:
-      # - on tag refs/tags/v*: use final
-      # - else: snapshot (or rc if you set it)
+      # Compute version via Reckon (settings plugin)
       - name: Compute version (Reckon)
+        shell: bash
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            STAGE=final
-            SCOPE=patch    # or infer via commit messages, or read from release notes
+            STAGE="final"
+            SCOPE="patch"
           else
-            STAGE=snapshot
-            SCOPE=patch
+            STAGE="snapshot"
+            SCOPE="patch"
           fi
-          ./gradlew -Preckon.stage=$STAGE -Preckon.scope=$SCOPE -q printVersion > version.txt
-          VER=$(cat version.txt)
-          SAFE_VER=${VER//+/-}
-          echo "VER=$VER" >> $GITHUB_ENV
-          echo "SAFE_VER=$SAFE_VER" >> $GITHUB_ENV
+
+          ./gradlew -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion > version.txt
+          VER="$(cat version.txt)"
+          SAFE_VER="${VER//+/-}"   # '+' not allowed in docker/helm chart version
+
+          echo "VER=$VER" >> "$GITHUB_ENV"
+          echo "SAFE_VER=$SAFE_VER" >> "$GITHUB_ENV"
           echo "Computed version: $VER (safe: $SAFE_VER)"
 
-      - name: Login GHCR (Docker)
-        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GHCR (Docker)
+        run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Build & Push image (multi-arch)
+      - name: Build & Push Docker (multi-arch)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -63,21 +71,22 @@ jobs:
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.version=${{ env.VER }}
 
-      - uses: azure/setup-helm@v4
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
 
       - name: Vendor chart deps
         run: helm dependency update "${{ env.CHART_DIR }}"
 
-      - name: Package chart (OCI)
+      - name: Package Helm chart (OCI)
+        shell: bash
         run: |
           helm package "${{ env.CHART_DIR }}" \
             --version "${{ env.SAFE_VER }}" \
             --app-version "${{ env.VER }}" \
             --destination dist
 
-      - name: Login GHCR (Helm/OCI)
-        run: echo "${{ github.token }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GHCR (Helm/OCI)
+        run: echo "${{ github.token }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Push chart (OCI)
-        run: |
-          helm push dist/heatwise-stack-${{ env.SAFE_VER }}.tgz oci://${{ env.OCI_REPO }}
+      - name: Push Helm chart (OCI)
+        run: helm push "dist/heatwise-stack-${{ env.SAFE_VER }}.tgz" oci://${{ env.OCI_REPO }}
