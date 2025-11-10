@@ -3,13 +3,13 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: heatwise
-  namespace: monitoring
+  namespace: {{ .Values.monitoring.namespace | default "monitoring" }}
 spec:
   namespaceSelector:
-    matchNames: ["{{ .Release.Namespace }}"]
+    matchNames: [{{ include "heatwise.name" . }}]
   selector:
     matchLabels:
-      app.kubernetes.io/name:  {{ include "heatwise.name" . }}
+      app.kubernetes.io/name: {{ include "heatwise.name" . }}
   endpoints:
     - port: {{ .Values.monitoring.portName | default "http" }}
       path: {{ .Values.monitoring.path | default "/metrics" }}

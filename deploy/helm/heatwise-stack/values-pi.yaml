@@ -15,5 +15,8 @@ kafka:
   storage:
     enabled: true
     size: 5Gi
-    storageClass: local-path      # <= k3s default provisioner
+    storageClass: local-path
 
+heatwise:
+  image:
+    tag: "0.5.0"

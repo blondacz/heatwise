@@ -35,12 +35,12 @@ persistence:
   size: 1Gi
   storageClass: ""
 
-serviceMonitor:
-  enabled: false
-  namespace: ""
-  labels: {}
-  interval: 30s
-  scrapeTimeout: 10s
+
+
+monitoring:
+  portName: http
+  path: /metrics
+  interval: 15s
 
 ingress:
   enabled: false
