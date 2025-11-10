@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/blondacz/heatwise
   tag: "" # empty -> inherit .Chart.AppVersion by default
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 
@@ -54,7 +54,7 @@ ingress:
   tls: []
 
 podDisruptionBudget:
-  enabled: true
+  enabled: false  # Disabled because replicaCount is 1; enable when scaling up
   minAvailable: 1
 
 podAnnotations: {}
@@ -64,7 +64,7 @@ tolerations: []
 
 podSecurityContext:
   runAsNonRoot: true
-  fsGroup: 0
+  fsGroup: 10001  # Match runAsGroup for proper file permissions
   fsGroupChangePolicy: Always
 
 securityContext:

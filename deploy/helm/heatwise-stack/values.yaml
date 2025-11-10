@@ -1,7 +1,7 @@
 kafka:
   image:
     repository: apache/kafka
-    tag: latest
+    tag: "4.1.1-rc2"
     pullPolicy: IfNotPresent
   replicas: 1
   storage:
@@ -18,7 +18,8 @@ kafka:
     limits:
       cpu: 1
       memory: 1Gi
-  # clusterId must remain stable across upgrades
+  # clusterId must remain stable across upgrades and be unique per environment
+  # Generate with: uuidgen | base64 | cut -c1-22
   clusterId: "W5rnOD84VCyfU6lXqFXPzA"
   # Listener advertised host: service name works in-cluster
   advertisedHost: "kafka"
@@ -28,8 +29,8 @@ kafka:
 heatwise:
   image:
     repository: ghcr.io/blondacz/heatwise
-    tag: latest
-    pullPolicy: Always
+    tag: ""
+    pullPolicy: IfNotPresent
   env:
     HEATWISE__KAFKA__BOOTSTRAP: "kafka:9092"
     HEATWISE__KAFKA__DEVICEID: "cylinder-1"

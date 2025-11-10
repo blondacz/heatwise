@@ -65,15 +65,17 @@ spec:
               mountPath: {{ .Values.temperatureSensor.w1.mountPath }}
               readOnly: true
             {{- end }}
-      {{- if .Values.persistence.enabled }}
+      {{- if or .Values.persistence.enabled .Values.temperatureSensor.enabled }}
       volumes:
+        {{- if .Values.persistence.enabled }}
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "heatwise.name" . }}-pvc
-      {{- if .Values.temperatureSensor.enabled }}
+        {{- end }}
+        {{- if .Values.temperatureSensor.enabled }}
         - name: w1
           hostPath:
             path: {{ .Values.temperatureSensor.w1.hostPath }}
             type: Directory
-      {{- end }}
+        {{- end }}
       {{- end }}

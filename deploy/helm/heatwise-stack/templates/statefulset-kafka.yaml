@@ -4,16 +4,21 @@ metadata:
   name: kafka
   labels:
     app.kubernetes.io/name: kafka
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Values.kafka.image.tag | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   serviceName: kafka
   replicas: {{ .Values.kafka.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: kafka
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: kafka
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       containers:
         - name: kafka
@@ -58,8 +63,13 @@ spec:
               mountPath: /var/lib/kafka/data
           resources:
             {{- toYaml .Values.kafka.resources | nindent 12 }}
+      {{- if not .Values.kafka.storage.enabled }}
+      volumes:
+        - name: data
+          emptyDir: {}
+      {{- end }}
+  {{- if .Values.kafka.storage.enabled }}
   volumeClaimTemplates:
-    {{- if .Values.kafka.storage.enabled }}
     - metadata:
         name: data
       spec:
@@ -70,7 +80,4 @@ spec:
         {{- if .Values.kafka.storage.storageClass }}
         storageClassName: {{ .Values.kafka.storage.storageClass }}
         {{- end }}
-    {{- else }}
-    # EmptyDir for dev (no persistence)
-    # We still need the volume name referenced in volumeMounts
-    {{- end }}
+  {{- end }}

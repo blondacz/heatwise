@@ -4,10 +4,14 @@ metadata:
   name: kafka
   labels:
     app.kubernetes.io/name: kafka
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Values.kafka.image.tag | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   type: {{ .Values.kafka.service.type }}
   selector:
     app.kubernetes.io/name: kafka
+    app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: tcp-kafka
       port: {{ .Values.kafka.service.port }}

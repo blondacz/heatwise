@@ -25,7 +25,7 @@ project.md
 /decisions/2025-11-01.log
 /decisions/2025-11-02.log
 /docs/content/diagrams/basic.svg
-/deploy/helm/heatwise-stack/charts/heatwise-0.2.0.tgz
+/deploy/helm/heatwise-stack/charts/*.tgz
 /deploy/helm/heatwise-stack/Chart.lock
 .DS_Store
 
