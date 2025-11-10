@@ -1,0 +1,17 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: heatwise
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames: ["{{ .Release.Namespace }}"]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name:  {{ include "heatwise.name" . }}
+  endpoints:
+    - port: {{ .Values.monitoring.portName | default "http" }}
+      path: {{ .Values.monitoring.path | default "/metrics" }}
+      interval: {{ .Values.monitoring.interval | default "15s" }}
+{{- end }}

@@ -1,5 +1,5 @@
 [versions]
-
+promVer = "0.16.0"
 [libraries]
 
 circe-core="io.circe:circe-core_3:0.14.15"
@@ -10,6 +10,10 @@ circe-parser="io.circe:circe-parser_3:0.14.15"
 sttp-circe='com.softwaremill.sttp.client4:circe_3:4.0.13'
 
 
+prometheus-client="io.prometheus:simpleclient:0.16.0"
+prometheus-client-common="io.prometheus:simpleclient_common:0.16.0"
+prometheus-client-hotspot="io.prometheus:simpleclient_hotspot:0.16.0"
+
 
 junit-platform-launcher="org.junit.platform:junit-platform-launcher:1.13.1"
 junit-platform-engine="org.junit.platform:junit-platform-engine:1.13.1"
@@ -17,6 +21,7 @@ junit-scala-test-plus="org.scalatestplus:junit-5-13_3:3.2.19.0"
 
 logback='ch.qos.logback:logback-classic:1.5.20'
 
+pekko-circe="com.github.pjfanning:pekko-http-circe_3:3.6.0"
 pekko-http='org.apache.pekko:pekko-http_3:1.3.0'
 pekko-http-testkit="org.apache.pekko:pekko-http-testkit_3:1.3.0"
 pekko-http-backend="com.softwaremill.sttp.client4:pekko-http-backend_3:4.0.13"
@@ -46,6 +51,9 @@ testcontainers-kafka="org.testcontainers:kafka:1.20.4"
 [bundles]
 circe = [
     "circe-core", "circe-generic", "circe-parser"
+]
+prometheus=[
+    "prometheus-client", "prometheus-client-common", "prometheus-client-hotspot"
 ]
 
 

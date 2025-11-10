@@ -51,3 +51,8 @@ heatwise:
     w1:
       hostPath: "/sys/devices/w1_bus_master1"
       mountPath: "/sys/devices/w1_bus_master1"
+monitoring:
+  enabled: true
+  portName: http
+  path: /metrics
+  interval: 15s

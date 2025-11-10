@@ -5,8 +5,10 @@ import dev.g4s.heatwise.adapters.octopus.{LivePriceService, OctopusClient}
 import dev.g4s.heatwise.adapters.relay.*
 import dev.g4s.heatwise.adapters.cylinder.LiveCylinderTemperatureService
 import dev.g4s.heatwise.audit.{DecisionLog, FileAuditService, KafkaAuditService}
+import io.prometheus.client.CollectorRegistry
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.server.Directives._enhanceRouteWithConcatenation
 import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.{Done, NotUsed}
 
@@ -36,9 +38,17 @@ object Main {
       delay = Delay()
     )
 
+    given metricsRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
+    val metricsRoute = new MetricsRoute()
+    metricsRoute.init()
+
     given healthRegistry : HealthRegistry = new SimpleHealthRegistry()
 
-    Http().newServerAt("0.0.0.0", 8080).bind(HealthRoutes.routes(healthRegistry, healthRegistry, Map("config" -> sys.props.mkString(","), "startedAt" -> clock.instant().toString), cfg))
+    val httpRoutes = HealthRoutes.routes(healthRegistry, healthRegistry,
+      Map("config" -> sys.props.mkString(","),
+        "startedAt" -> clock.instant().toString), cfg) ~ metricsRoute.route
+
+    Http().newServerAt("0.0.0.0", 8080).bind(httpRoutes)
 
     val app = new HeatwiseApp(
       new LivePriceService(LivenessCheck("price", 20.minutes), ReadinessCheck("price")),
