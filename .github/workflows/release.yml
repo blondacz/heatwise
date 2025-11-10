@@ -1,0 +1,83 @@
+name: Build & Publish (Reckon + Docker + Helm)
+
+on:
+  push:
+    branches: [ main ]
+    tags:     [ 'v*' ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/heatwise
+  CHART_DIR: deploy/helm/heatwise-stack
+  OCI_REPO:  ghcr.io/${{ github.repository_owner }}
+  JAVA_VERSION: '21'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }    # Reckon needs tags
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+
+      - uses: gradle/gradle-build-action@v3
+
+      # Decide stage automatically:
+      # - on tag refs/tags/v*: use final
+      # - else: snapshot (or rc if you set it)
+      - name: Compute version (Reckon)
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            STAGE=final
+            SCOPE=patch    # or infer via commit messages, or read from release notes
+          else
+            STAGE=snapshot
+            SCOPE=patch
+          fi
+          ./gradlew -Preckon.stage=$STAGE -Preckon.scope=$SCOPE -q printVersion > version.txt
+          VER=$(cat version.txt)
+          SAFE_VER=${VER//+/-}
+          echo "VER=$VER" >> $GITHUB_ENV
+          echo "SAFE_VER=$SAFE_VER" >> $GITHUB_ENV
+          echo "Computed version: $VER (safe: $SAFE_VER)"
+
+      - name: Login GHCR (Docker)
+        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build & Push image (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.IMAGE_REPO }}:${{ env.SAFE_VER }}
+            ${{ env.IMAGE_REPO }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.version=${{ env.VER }}
+
+      - uses: azure/setup-helm@v4
+
+      - name: Vendor chart deps
+        run: helm dependency update "${{ env.CHART_DIR }}"
+
+      - name: Package chart (OCI)
+        run: |
+          helm package "${{ env.CHART_DIR }}" \
+            --version "${{ env.SAFE_VER }}" \
+            --app-version "${{ env.VER }}" \
+            --destination dist
+
+      - name: Login GHCR (Helm/OCI)
+        run: echo "${{ github.token }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push chart (OCI)
+        run: |
+          helm push dist/heatwise-stack-${{ env.SAFE_VER }}.tgz oci://${{ env.OCI_REPO }}
