@@ -28,3 +28,7 @@ project.md
 /deploy/helm/heatwise-stack/charts/heatwise-0.2.0.tgz
 /deploy/helm/heatwise-stack/Chart.lock
 .DS_Store
+
+**/build/
+**/.gradle/
+.gradle/

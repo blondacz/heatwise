@@ -36,22 +36,37 @@ jobs:
         uses: gradle/gradle-build-action@v3
 
       # Compute version via Reckon (settings plugin)
+      - name: Ensure clean workspace (pre-Reckon)
+        run: |
+          git reset --hard
+          git clean -fdx
+          git status --porcelain
+      - name: Diagnose repo cleanliness
+        run: |
+          echo "== git status =="
+          git status --porcelain || true
+          echo "== ls -la (top) =="
+          ls -la || true
+          echo "== find stray files =="
+          find . -maxdepth 2 -type f -not -path "./.git/*" | sed 's|^\./||' | sort | head -200
+
       - name: Compute version (Reckon)
         shell: bash
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             STAGE="final"
-            SCOPE="patch"
+            SCOPE="patch"   # adjust if you tag minor/major
           else
-            STAGE="snapshot"   # rc/final require a clean tree
+            STAGE="snapshot"  # rc/final require clean tree
             SCOPE="patch"
           fi
-          
+
           VER="$(./gradlew -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion)"
           SAFE_VER="${VER//+/-}"
-          
+
           echo "VER=$VER" >> "$GITHUB_ENV"
           echo "SAFE_VER=$SAFE_VER" >> "$GITHUB_ENV"
+          echo "Computed version: $VER (safe: $SAFE_VER)"
 
       - name: Login to GHCR (Docker)
         run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
