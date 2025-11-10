@@ -32,3 +32,4 @@ project.md
 **/build/
 **/.gradle/
 .gradle/
+**/.kotlin/
