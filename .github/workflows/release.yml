@@ -43,11 +43,11 @@ jobs:
             STAGE="final"
             SCOPE="patch"
           else
-            STAGE="snapshot"
+            STAGE="rc"
             SCOPE="patch"
           fi
 
-          ./gradlew -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion > version.txt
+          ./gradlew --info -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion > version.txt
           VER="$(cat version.txt)"
           SAFE_VER="${VER//+/-}"   # '+' not allowed in docker/helm chart version
 
