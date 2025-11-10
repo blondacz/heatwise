@@ -35,7 +35,7 @@ object DecisionReason {
   final case class PriceTooHigh(currentPrice: BigDecimal, maxPricePerKWh: BigDecimal) extends DecisionReason
   final case class DelayTooShort(delay: Delay, lastChange: Instant) extends DecisionReason
   final case class InPreheatPeriod(preheatBefore: PreheatBefore) extends DecisionReason
-  final case class NotInPreheatPeriod(preheatBefore: PreheatBefore) extends DecisionReason
+  case object NotInPreheatPeriod extends DecisionReason
   final case class TemperatureOk(currentTemperature: Temperature, desiredTemperature: Temperature) extends DecisionReason
 }
 
@@ -65,21 +65,29 @@ object Decide {
         case None => true
       }
 
-      policy.morningPreheat.fold {
-        if (slotOk && delayOk)
-          Decision(now, true, PriceOk(price.pricePerKWh, policy.maxPricePerKWh))
-        else if (!slotOk)
-          Decision(now, false, PriceTooHigh(price.pricePerKWh, policy.maxPricePerKWh))
-        else
-          Decision(now, false, DelayTooShort(policy.delay, lastOnChange.get.lastChangeTs))
+      val inPreheatPeriod = policy.morningPreheat.fold {
+        NotInPreheatPeriod
       } { case p@PreheatBefore(readyBy, duration) =>
         val localNow = LocalDateTime.ofInstant(now, ZoneOffset.UTC)
         val localReadyBy = LocalDateTime.ofInstant(now, ZoneOffset.UTC).`with`(readyBy)
         if (localNow.isBefore(localReadyBy) && localNow.isAfter(localReadyBy.minus(duration)) && delayOk)
-          Decision(now, true, InPreheatPeriod(p))
+          InPreheatPeriod(p)
         else
-          Decision(now, false, NotInPreheatPeriod(p))
+          NotInPreheatPeriod
       }
+
+      if (slotOk && delayOk)
+        Decision(now, true, PriceOk(price.pricePerKWh, policy.maxPricePerKWh))
+      else if (!slotOk && delayOk && inPreheatPeriod == NotInPreheatPeriod) {
+        Decision(now, false, PriceTooHigh(price.pricePerKWh, policy.maxPricePerKWh))
+      } else if (!delayOk) {
+        Decision(now, false, DelayTooShort(policy.delay, lastOnChange.get.lastChangeTs))
+      }  else if (inPreheatPeriod == NotInPreheatPeriod) {
+        Decision(now, false, NotInPreheatPeriod)
+      } else {
+        Decision(now, true, InPreheatPeriod(policy.morningPreheat.get))
+      }
+
     } else Decision(clock.instant(), false, TemperatureOk(currentTemperature, policy.desiredTemperature))
   }
 }

@@ -71,7 +71,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
       val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, lowTemp, None, policy)
-      decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
+      decision.reason shouldBe PriceTooHigh(4, 3)
       decision.heatOn shouldBe false
     }
 
@@ -81,7 +81,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
       val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, lowTemp, None, policy)
-      decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
+      decision.reason shouldBe PriceTooHigh(4, 3)
       decision.heatOn shouldBe false
     }
 
@@ -91,7 +91,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
       val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, lowTemp, Some(ControllerState(now,true)), policy)
-      decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
+      decision.reason shouldBe DelayTooShort(Delay(2, 1), now)
       decision.heatOn shouldBe false
     }
 
@@ -101,7 +101,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
 
       val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, lowTemp, Some(ControllerState(now,false)), policy)
-      decision.reason shouldBe NotInPreheatPeriod(preheatBefore)
+      decision.reason shouldBe  DelayTooShort(Delay(2, 1), now)
       decision.heatOn shouldBe false
     }
   }

@@ -75,7 +75,7 @@ class HeatwiseAppTest extends TestKit(ActorSystem("HeatwiseAppTest"))
           first._2.reason shouldBe DecisionReason.PriceOk(BigDecimal(5), BigDecimal(10))
 
           second._2.heatOn shouldBe false
-          second._2.reason shouldBe DecisionReason.PriceTooHigh(BigDecimal(15), BigDecimal(10))
+          second._2.reason shouldBe DecisionReason.DelayTooShort(Delay(2, 1), clock.instant())
 
           third._2.heatOn shouldBe false
         }

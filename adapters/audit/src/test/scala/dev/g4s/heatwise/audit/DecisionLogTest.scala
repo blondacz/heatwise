@@ -51,7 +51,7 @@ class DecisionLogTest extends AnyFreeSpec with Matchers {
       val base = tempBaseDir()
       val ts1 = Instant.parse("2025-03-15T00:00:01Z")
       val ts2 = Instant.parse("2025-03-15T12:34:56Z")
-      val d1 = Decision(ts1, heatOn = true, DecisionReason.NotInPreheatPeriod(PreheatBefore(LocalTime.NOON, Duration.ofMinutes(30))))
+      val d1 = Decision(ts1, heatOn = true, DecisionReason.NotInPreheatPeriod)
       val d2 = Decision(ts2, heatOn = false, DecisionReason.DelayTooShort(Delay(5, 5), ts1))
 
       DecisionLog.append(d1, base)
