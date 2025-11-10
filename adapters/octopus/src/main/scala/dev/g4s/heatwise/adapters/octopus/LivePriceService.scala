@@ -11,7 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class LivePriceService(livenessCheck: LivenessCheck, readinessCheck: ReadinessCheck)(using clock: Clock) extends PriceService {
   readinessCheck.update(HealthResult.healthy("Ready to serve"))
   def fetchCurrentPrice(cfg: HeatwiseConfig, now: ZonedDateTime)(using system: ActorSystem, backend: Backend[Future], executionContext: ExecutionContext): Future[PricePoint] = {
-    livenessCheck.update(HealthResult.healthy("Ticking"))
     val priceRequest = PriceRequest.fromDateTimForDuration(cfg.productCode, cfg.tariffCode, LocalDateTime.now(), java.time.Duration.ofHours(2))
     OctopusClient
       .fetchPrices(OctopusClient.urlForStandardUnitRates(priceRequest))
@@ -20,7 +19,9 @@ class LivePriceService(livenessCheck: LivenessCheck, readinessCheck: ReadinessCh
           system.log.error(ex, "Failed to fetch prices")
           PricePoint.MaxPricePerKWh(now)
         case Right(PriceResponse(res)) =>
-          res.sortBy(_.validFrom).find(p => !p.validFrom.isAfter(now)).getOrElse(res.headOption.getOrElse(PricePoint.MaxPricePerKWh(now)))
+          val pricePoint = res.sortBy(_.validFrom).find(p => !p.validFrom.isAfter(now)).getOrElse(res.headOption.getOrElse(PricePoint.MaxPricePerKWh(now)))
+          livenessCheck.update(HealthResult.healthy(s"Last price: $pricePoint"))
+          pricePoint
       }
   }
 }
