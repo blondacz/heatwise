@@ -3,7 +3,7 @@ name: docker-publish
 
 on:
   push:
-    branches: [ main, master ]
+    branches: ["disabled"]
     tags: [ 'v*.*.*' ]
   workflow_dispatch: {}
 

@@ -43,17 +43,15 @@ jobs:
             STAGE="final"
             SCOPE="patch"
           else
-            STAGE="rc"
+            STAGE="snapshot"   # rc/final require a clean tree
             SCOPE="patch"
           fi
-
-          ./gradlew --info -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion > version.txt
-          VER="$(cat version.txt)"
-          SAFE_VER="${VER//+/-}"   # '+' not allowed in docker/helm chart version
-
+          
+          VER="$(./gradlew -Preckon.stage="$STAGE" -Preckon.scope="$SCOPE" -q printVersion)"
+          SAFE_VER="${VER//+/-}"
+          
           echo "VER=$VER" >> "$GITHUB_ENV"
           echo "SAFE_VER=$SAFE_VER" >> "$GITHUB_ENV"
-          echo "Computed version: $VER (safe: $SAFE_VER)"
 
       - name: Login to GHCR (Docker)
         run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin

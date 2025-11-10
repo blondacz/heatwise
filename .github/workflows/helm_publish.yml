@@ -1,6 +1,7 @@
 name: Publish Helm (GHCR)
 on:
   push:
+    branches: ["disabled"]
     tags: ["v*"]   # or on main with a chart version bump
 jobs:
   publish:
