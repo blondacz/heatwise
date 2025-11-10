@@ -26,3 +26,7 @@ dependencies {
     testImplementation(libs.pekko.http.testkit)
 }
 
+tasks.register("printVersion") {
+    doLast { println(project.version.toString()) }
+}
+
