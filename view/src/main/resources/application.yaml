@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: heatwise-view
+  kafka:
+    bootstrap-servers: kafka:9092
+    streams:
+      application-id: heatwise-view
+      properties:
+        processing.guarantee: exactly_once_v2
+        num.stream.threads: 1
+        commit.interval.ms: 200
+        cache.max.bytes.buffering: 10485760
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+management:
+  endpoints.web.exposure.include: health,info,metrics,prometheus
+  endpoint.health.show-details: when_authorized
+
+heatwise:
+  topics:
+    state: heatwise.state
+    decision: heatwise.decision
+    view: heatwise.view

@@ -55,3 +55,27 @@ heatwise:
   monitoring:
     enabled: true
     namespace: monitoring
+
+heatwise-view:
+  repository: ghcr.io/blondacz/heatwise-view
+  tag: ""
+  pullPolicy: IfNotPresent
+
+  env:
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    STREAMS_APP_ID: "heatwise-view"
+    STREAMS_THREADS: "1"
+    STATE_TOPIC: "heatwise.state"
+    DECISION_TOPIC: "heatwise.decision"
+    VIEW_TOPIC: "heatwise.view"
+
+  persistence:
+    enabled: true #RocksDB persistence accross restarts
+    size: 5Gi
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: heatwise-view.local
+    annotations: {}
+    tls: []

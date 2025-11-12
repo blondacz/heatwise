@@ -1,0 +1,24 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "heatwise-view.fullname" . }}
+  {{- if .Values.monitoring.namespace }}
+  namespace: {{ .Values.monitoring.namespace }}
+  {{- end }}
+  labels:
+    release: prometheus
+    {{- with .Values.monitoring.additionalLabels }}{{ toYaml . | nindent 4 }}{{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "heatwise-view.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: actuator
+      path: /actuator/prometheus
+      interval: {{ .Values.monitoring.scrapeInterval }}
+{{- end }}
