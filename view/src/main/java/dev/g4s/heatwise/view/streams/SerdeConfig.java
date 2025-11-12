@@ -21,7 +21,7 @@ public class SerdeConfig {
     @Bean
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
-         restTemplate.getMessageConverters().add(0, createMappingJacksonHttpMessageConverter());
+         restTemplate.getMessageConverters().addFirst(createMappingJacksonHttpMessageConverter());
          return restTemplate;
     }
 

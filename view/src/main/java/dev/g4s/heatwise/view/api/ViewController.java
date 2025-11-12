@@ -4,13 +4,11 @@ import dev.g4s.heatwise.view.domain.DeviceView;
 import dev.g4s.heatwise.view.streams.TopologyConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StoreQueryParameters;
-import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;

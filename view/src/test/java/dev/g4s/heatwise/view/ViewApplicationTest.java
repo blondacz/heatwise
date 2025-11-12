@@ -57,7 +57,7 @@ class ViewApplicationTest {
        try (AdminClient admin = AdminClient.create(config)) {
            admin.createTopics(List.of(
                new NewTopic("heatwise.state", 1, (short) 1),
-               new NewTopic("heatwise.decision", 1, (short) 1)
+               new NewTopic("heatwise.decisions", 1, (short) 1)
            )).all().get();
        }
     }
@@ -108,7 +108,7 @@ class ViewApplicationTest {
             producer.send(new ProducerRecord<>("heatwise.state", deviceId, state)).get();
 
             Decision decision = new Decision(deviceId, false, "Test reason", now);
-            producer.send(new ProducerRecord<>("heatwise.decision", deviceId, decision)).get();
+            producer.send(new ProducerRecord<>("heatwise.decisions", deviceId, decision)).get();
         }
 
         await().atMost(30, SECONDS).untilAsserted(() -> {
@@ -143,10 +143,10 @@ class ViewApplicationTest {
         try (KafkaProducer<String, Object> producer = new KafkaProducer<>(producerProps)) {
             // Send messages for two devices
             producer.send(new ProducerRecord<>("heatwise.state", deviceId1, new State(deviceId1, now, true))).get();
-            producer.send(new ProducerRecord<>("heatwise.decision", deviceId1, new Decision(deviceId1, true, "Reason 1", now))).get();
+            producer.send(new ProducerRecord<>("heatwise.decisions", deviceId1, new Decision(deviceId1, true, "Reason 1", now))).get();
 
             producer.send(new ProducerRecord<>("heatwise.state", deviceId2, new State(deviceId2, now, false))).get();
-            producer.send(new ProducerRecord<>("heatwise.decision", deviceId2, new Decision(deviceId2, false, "Reason 2", now))).get();
+            producer.send(new ProducerRecord<>("heatwise.decisions", deviceId2, new Decision(deviceId2, false, "Reason 2", now))).get();
         }
 
         // Wait for processing and verify all devices endpoint

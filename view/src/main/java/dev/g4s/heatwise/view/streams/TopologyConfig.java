@@ -100,7 +100,7 @@ public class TopologyConfig {
     private static boolean isAfter(Decision newVal, Decision oldVal) {
             return switch (newVal) {
                 case null -> false;
-                case Decision nv when oldVal == null -> true;
+                case Decision ignored when oldVal == null -> true;
                 case Decision nv -> !nv.ts().isBefore(oldVal.ts()); //newVal >= oldVal
             };
         }

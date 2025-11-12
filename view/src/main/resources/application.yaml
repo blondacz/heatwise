@@ -14,11 +14,13 @@ spring:
         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
 
 management:
+  server:
+    port: 8081
   endpoints.web.exposure.include: health,info,metrics,prometheus
   endpoint.health.show-details: when_authorized
 
 heatwise:
   topics:
-    state: heatwise.state
-    decision: heatwise.decision
-    view: heatwise.view
+    state: ${STATE_TOPIC:heatwise.state}
+    decision: ${DECISION_TOPIC:heatwise.decisions}
+    view: ${VIEW_TOPIC:heatwise.view}

@@ -23,7 +23,7 @@ public class TopologySmokeTest {
     void latestDecisionWinsAndJoinsState() {
         StreamsBuilder b = new StreamsBuilder();
         SerdeConfig serdeCfg = new SerdeConfig();
-        TopologyConfig topo = new TopologyConfig("heatwise.state", "heatwise.decision", "heatwise.view");
+        TopologyConfig topo = new TopologyConfig("heatwise.state", "heatwise.decisions", "heatwise.view");
 
         topo.heatwiseTopology(
                 b,
@@ -45,7 +45,7 @@ public class TopologySmokeTest {
                     serdeCfg.stateSerde(serdeCfg.objectMapper()).serializer()
             );
             var decisionIn = td.createInputTopic(
-                    "heatwise.decision",
+                    "heatwise.decisions",
                     Serdes.String().serializer(),
                     serdeCfg.decisionSerde(serdeCfg.objectMapper()).serializer()
             );

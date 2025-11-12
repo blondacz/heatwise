@@ -1,6 +1,8 @@
 name: build-push-view
 on:
   push:
+    tags:
+      - "v*"
     paths:
       - 'view/**'
       - '.github/workflows/view-image.yml'
@@ -50,7 +52,7 @@ jobs:
             STAGE="final"
             SCOPE="patch"   # adjust if you tag minor/major
           else
-            STAGE="rc"  # rc/final require clean tree
+            STAGE="snapshot"  # rc/final require clean tree
             SCOPE="patch"
           fi
           
