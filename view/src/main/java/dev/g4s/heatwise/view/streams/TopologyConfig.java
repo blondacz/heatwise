@@ -54,13 +54,15 @@ public class TopologyConfig {
                 Materialized.<String, State>as(stateStoreSupplier)
                         .withKeySerde(Serdes.String())
                         .withValueSerde(stateSerde)
-        );
+        ).mapValues((key, value) -> value == null ? null :
+                new State(key, value.lastChangeTs(), value.lastOn()));
 
         KeyValueBytesStoreSupplier decisionStoreSupplier =
                 Stores.persistentKeyValueStore(DECISION_STORE_NAME);
 
         KTable<String, Decision> lastDecisionTable = builder
                 .stream(decisionTopic, Consumed.with(Serdes.String(), decisionSerde))
+                .mapValues((key,value) -> new Decision(key,value.heatOn(),value.reason(), value.ts()))
                 .groupByKey(Grouped.with(Serdes.String(), decisionSerde))
                 .reduce((oldVal, newVal) ->
                                 (isAfter(newVal, oldVal) ? newVal : oldVal),

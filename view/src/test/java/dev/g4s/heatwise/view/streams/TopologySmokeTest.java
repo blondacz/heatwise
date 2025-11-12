@@ -30,7 +30,7 @@ public class TopologySmokeTest {
                 serdeCfg.stateSerde(serdeCfg.objectMapper()),
                 serdeCfg.decisionSerde(serdeCfg.objectMapper())
         );
-        Topology built = b.build();
+        Topology builtTopology = b.build();
 
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
@@ -38,7 +38,7 @@ public class TopologySmokeTest {
         // props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         // props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass());
 
-        try (TopologyTestDriver td = new TopologyTestDriver(built, props)) {
+        try (TopologyTestDriver td = new TopologyTestDriver(builtTopology, props)) {
             var stateIn = td.createInputTopic(
                     "heatwise.state",
                     Serdes.String().serializer(),
@@ -50,7 +50,7 @@ public class TopologySmokeTest {
                     serdeCfg.decisionSerde(serdeCfg.objectMapper()).serializer()
             );
 
-            stateIn.pipeInput("dev1", new State("dev1", clock.instant(),true));
+            stateIn.pipeInput("dev1", new State(null, clock.instant(),true));
             decisionIn.pipeInput("dev1", new Decision("dev1",true,"Price OK",clock.instant()));
             decisionIn.pipeInput("dev1", new Decision("dev1",false,"Price too high",clock.instant().plusMillis(1)));
 
