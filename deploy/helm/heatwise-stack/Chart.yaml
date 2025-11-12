@@ -8,3 +8,6 @@ dependencies:
   - name: heatwise
     version: 0.3.0
     repository: "file://./charts/heatwise"
+  - name: heatwise-view
+    version: 0.1.0
+    repository: "file://./charts/heatwise-view"

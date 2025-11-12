@@ -1,5 +1,5 @@
 plugins {
-    `module-parent`
+    `module-scala`
 }
 
 dependencies {

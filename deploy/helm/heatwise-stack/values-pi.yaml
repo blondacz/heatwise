@@ -19,4 +19,9 @@ kafka:
 
 heatwise:
   image:
-    tag: "0.5.0"
+    tag: "0.6.1"
+heatwise-view:
+  image:
+    tag: "0.6.1-rc.1"
+
+

@@ -1,0 +1,52 @@
+image:
+  repository: ghcr.io/blondacz/heatwise-view
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+podAnnotations: {}
+podLabels: {}
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  STREAMS_APP_ID: "heatwise-view"
+  STREAMS_THREADS: "1"
+  STATE_TOPIC: "heatwise.state"
+  DECISION_TOPIC: "heatwise.decisions"
+  VIEW_TOPIC: "heatwise.view"
+
+service:
+  type: ClusterIP
+  port: 8080
+  actuatorPort: 8081
+
+probes:
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+monitoring:
+  enabled: true
+  scrapeInterval: 15s
+  # set the namespace if your Prometheus Operator expects it; otherwise omit
+  namespace: monitoring
+  additionalLabels: {}
+
+persistence:
+  enabled: false
+  size: 5Gi
+  storageClass: ""
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
