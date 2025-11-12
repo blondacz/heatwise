@@ -50,7 +50,7 @@ jobs:
             STAGE="final"
             SCOPE="patch"   # adjust if you tag minor/major
           else
-            STAGE="snapshot"  # rc/final require clean tree
+            STAGE="rc"  # rc/final require clean tree
             SCOPE="patch"
           fi
           
