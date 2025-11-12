@@ -1,0 +1,51 @@
+image:
+  repository: ghcr.io/blondacz/heatwise-ui
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: ui.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Runtime config that becomes config.json (mounts over /usr/share/nginx/html/config.json)
+uiConfig:
+  env: "dev"
+  apiBaseUrl: "http://heatwise-api.dev.svc.cluster.local:8080"
+  build:
+    version: "0.1.0"
+    revision: "git-sha"
+
+labels:
+  team: "platform"
+  app.kubernetes.io/part-of: "heatwise"
+
+annotations: {}
+podAnnotations: {}
+
+networkPolicy:
+  enabled: true
+  allowFromNamespaces: [] # e.g., [ { matchLabels: { "kubernetes.io/metadata.name": "platform-ingress" } } ]

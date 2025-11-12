@@ -33,3 +33,4 @@ project.md
 **/.gradle/
 .gradle/
 **/.kotlin/
+/ui/node_modules/

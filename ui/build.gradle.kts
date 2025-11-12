@@ -34,3 +34,8 @@ tasks.register<Copy>("copyDist") {
     from("dist")
     into(layout.buildDirectory.dir("dist"))
 }
+
+tasks.register<com.github.gradle.node.npm.task.NpmTask>("dev") {
+    dependsOn(tasks.named("npmInstall"))
+    args.set(listOf("run", "dev"))
+}

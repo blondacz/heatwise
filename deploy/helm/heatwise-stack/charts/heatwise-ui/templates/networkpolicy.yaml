@@ -1,0 +1,34 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "heatwise-ui.fullname" . }}-default
+  labels:
+    {{- include "heatwise-ui.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ include "heatwise-ui.fullname" . }}
+  policyTypes:
+    - Ingress
+    - Egress
+
+  {{- if .Values.networkPolicy.allowFromNamespaces }}
+  ingress:
+    - from:
+        {{- range .Values.networkPolicy.allowFromNamespaces }}
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .matchLabels | nindent 14 }}
+        {{- end }}
+  {{- end }}
+
+  # Egress: allow all explicitly (IPv4 + IPv6). If you want default-deny egress,
+  # delete the whole egress block.
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+        - ipBlock:
+            cidr: ::/0
+{{- end }}

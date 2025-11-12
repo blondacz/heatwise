@@ -19,10 +19,9 @@ async function get<T>(base: string, path: string): Promise<T> {
   return r.json()
 }
 
-/** Example calls – adjust paths to your heatwise-view endpoints */
 export const api = {
   health: (base: string) => get<{ status: string }>(base, '/health'),
   latestDecision: (base: string) => get<any>(base, '/decisions/latest'),
   recentStateChanges: (base: string, limit = 20) =>
-    get<any[]>(base, `/state/changes?limit=${limit}`),
+    get<any[]>(base, `/api/view/devices?limit=${limit}`),
 }

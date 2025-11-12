@@ -15,11 +15,11 @@ export default function App() {
         setConfig(cfg)
         if (!cfg.apiBaseUrl) return
 
-        const h = await api.health(cfg.apiBaseUrl)
-        setHealth(h?.status ?? 'ok')
+        // const h = await api.health(cfg.apiBaseUrl)
+        // setHealth(h?.status ?? 'ok')
 
-        const d = await api.latestDecision(cfg.apiBaseUrl)
-        setLatest(d)
+        // const d = await api.latestDecision(cfg.apiBaseUrl)
+        // setLatest(d)
 
         const sc = await api.recentStateChanges(cfg.apiBaseUrl, 20)
         setChanges(sc)
