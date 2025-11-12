@@ -11,3 +11,6 @@ dependencies:
   - name: heatwise-view
     version: 0.1.0
     repository: "file://./charts/heatwise-view"
+  - name: heatwise-ui
+    version: 0.1.0
+    repository: "file://./charts/heatwise-ui"

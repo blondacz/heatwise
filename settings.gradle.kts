@@ -27,6 +27,7 @@ include(
     "adapters:audit",
     "adapters:cylinder-temperature",
     "docs",
-    "view"
+    "view",
+    "ui"
 )
 

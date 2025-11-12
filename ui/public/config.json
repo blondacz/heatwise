@@ -1,0 +1,8 @@
+{
+  "env": "dev",
+  "apiBaseUrl": "http://localhost:8080",
+  "build": {
+    "version": "0.1.0",
+    "revision": "dev"
+  }
+}
