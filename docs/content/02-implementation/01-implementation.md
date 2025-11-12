@@ -10,8 +10,10 @@ Decisions are logged to **Kafka** Broker.
 - **circe** - for JSON serialization
 - **sttp** - for HTTP client
 - **pureconfig** - for configuration loading
+- **Kafka Streams** - for merging state and decisions
+- **NGINX and React** - creating UI
 
 ### Deployment
-- **Docker** - one application image and one kafka image
+- **Docker** - one application image, one kafka image, one View Image and One UI Image
 - **Kubernetes** - to maintain state and to orchestrate
 - **Helm** - to deploy

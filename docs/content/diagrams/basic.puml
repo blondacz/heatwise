@@ -15,10 +15,25 @@ node "Heatwise Service (Pekko Streams)" as App {
 }
 node "Shelly/Contactor" as Relay
 
+node "Heatwise UI (NGINX)" as UI {
+  [SPA]
+}
+
+node "Heatwise View (Spring - Kafka Streams)" as View {
+  [DeviceView KTable] as DVKT
+}
+
+
+
 node "Apache Kafka" as Kafka {
   queue "decisions"
   queue "state"
 }
+
+
+DVKT <-- SPA
+DVKT --> "decisions"
+DVKT --> "state"
 
 User --> App : configure thresholds
 Octopus --> [Price Poller] : HTTP JSON
