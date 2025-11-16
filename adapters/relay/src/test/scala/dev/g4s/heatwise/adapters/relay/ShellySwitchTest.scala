@@ -36,7 +36,7 @@ class ShellySwitchTest extends AnyFreeSpec with Matchers with ScalaFutures with 
          given backend: Backend[Future] =
            BackendStub.asynchronousFuture
              .whenRequestMatches(_.uri.toString == expectedUrl)
-             .thenRespond(ResponseStub.adjust(s"""{"output": $on}"""))
+             .thenRespond(ResponseStub.adjust(s"""{"was_on": $on}"""))
              .whenAnyRequest
              .thenRespondNotFound()
 

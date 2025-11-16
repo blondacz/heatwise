@@ -16,16 +16,16 @@ import scala.concurrent.{ExecutionContext, Future}
   * 230.1, "current": 0.05 }
   */
 object ShellySwitch {
-  given Decoder[SwitchResponse] = Decoder.forProduct1("output")(SwitchResponse.apply)
+  given Decoder[SwitchResponse] = Decoder.forProduct1("was_on")(SwitchResponse.apply)
   def url(deviceHost: String, on: Boolean): Uri = uri"http://$deviceHost/rpc/Switch.Set?id=0&on=$on"
 
-  case class SwitchResponse(output: Boolean)
+  case class SwitchResponse(was_on: Boolean)
 
   def switch(deviceHost: String, on: Boolean, dummyRun: Boolean = false)(using backend: Backend[Future], ex: ExecutionContext): Future[Either[Exception, Boolean]] = {
     if (dummyRun) 
       Future.successful(Right(on))
     else
-      val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse]).mapResponse(_.map(_.output))
+      val request = basicRequest.get(url(deviceHost, on)).response(asJson[SwitchResponse]).mapResponse(_.map(_.was_on))
       request.send(backend).map(_.body)
   }
 
