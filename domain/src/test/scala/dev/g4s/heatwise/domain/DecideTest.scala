@@ -54,7 +54,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val decision = Decide.decide(clock, price,lowTemp, Some(ControllerState(now,true)), policy)
 
       decision.reason shouldBe DelayTooShort(defaultDelay,now)
-      decision.heatOn shouldBe false
+      decision.heatOn shouldBe true
     }
 
     "delay is too short - after off" in {
@@ -92,7 +92,7 @@ class DecideTest extends AnyFreeSpec with Matchers with AppendedClues {
       val price = PricePoint(now.atZone(ZoneOffset.UTC), now.plusSeconds(1800).atZone(ZoneOffset.UTC), BigDecimal(4), BigDecimal(4.2))
       val decision = Decide.decide(clock, price, lowTemp, Some(ControllerState(now,true)), policy)
       decision.reason shouldBe DelayTooShort(Delay(2, 1), now)
-      decision.heatOn shouldBe false
+      decision.heatOn shouldBe true
     }
 
     "price too high, in the preheat period but delay is too short after heating off" in {

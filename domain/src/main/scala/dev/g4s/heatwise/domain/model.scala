@@ -81,7 +81,7 @@ object Decide {
       else if (!slotOk && delayOk && inPreheatPeriod == NotInPreheatPeriod) {
         Decision(now, false, PriceTooHigh(price.pricePerKWh, policy.maxPricePerKWh))
       } else if (!delayOk) {
-        Decision(now, false, DelayTooShort(policy.delay, lastOnChange.get.lastChangeTs))
+        Decision(now, lastOnChange.map(_.lastOn).getOrElse(false), DelayTooShort(policy.delay, lastOnChange.get.lastChangeTs))
       }  else if (inPreheatPeriod == NotInPreheatPeriod) {
         Decision(now, false, NotInPreheatPeriod)
       } else {
