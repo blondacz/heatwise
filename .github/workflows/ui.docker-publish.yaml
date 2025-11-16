@@ -1,11 +1,11 @@
-name: build-push-view
+name: build-push-ui
 on:
   push:
     tags:
       - "v*"
     paths:
-      - 'view/**'
-      - '.github/workflows/view.docker-publish.yaml'
+      - 'ui/**'
+      - '.github/workflows/ui.docker-publish.yaml'
   workflow_dispatch: {}
 
 permissions:
@@ -13,7 +13,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/heatwise-view
+  IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/heatwise-ui
   CHART_DIR: deploy/helm/heatwise-stack
   OCI_REPO: ghcr.io/${{ github.repository_owner }}
   JAVA_VERSION: "21"
@@ -75,7 +75,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: deploy/view.Dockerfile
+          file: deploy/ui.Dockerfile
           push: true
           platforms: linux/arm64
           cache-from: type=gha

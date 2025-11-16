@@ -20,6 +20,13 @@ kafka:
 heatwise:
   image:
     tag: "0.7.3"
+  env:
+    RELAY_HOST: "192.168.4.96"
+    MAX_PRICE_PER_KWH: "90.0"
+    MORNING_PREHEAT: "07:00"
+    DUMMY_RUN: "false"
+    CHECK_INTERVAL: "1 minute"
+    DESIRED_TEMPERATURE: "28.0"
 heatwise-view:
   image:
     tag: "0.7.3"
